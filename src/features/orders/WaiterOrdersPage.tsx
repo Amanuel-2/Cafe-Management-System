@@ -1,17 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { ShoppingBag, DollarSign, CheckCircle, Clock } from 'lucide-react';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
-import { Table, TableBody, TableHeader, Td, Th } from '../../components/ui/Table';
-import { DatePicker } from '../../components/ui/DatePicker';
-import { XCircle } from 'lucide-react';
+import { DateRangePicker } from '../../components/ui/DateRangePicker';
 import { useOrderStore } from '../../store/orderStore';
-import { cn } from '../../utils/cn';
+import { useAnalyticsStore } from '../../store/analyticsStore';
+import { useAuthStore } from '../../store/authStore';
+import { getOrdersInRange, getTotalRevenue, getTotalOrders } from '../../utils/analytics';
+import { formatETB } from '../../utils/currency';
 import type { OrderStatus } from '../../types/domain';
-
-function money(value: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
-}
 
 const getStatusVariant = (status: OrderStatus) => {
   switch (status) {
@@ -29,75 +28,137 @@ const getStatusVariant = (status: OrderStatus) => {
   }
 };
 
-const isSameDay = (date1: Date, date2: Date) => {
-  return (
-    date1.getDate() === date2.getDate() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getFullYear() === date2.getFullYear()
-  );
-};
+const StatCard = ({
+  title,
+  value,
+  icon: Icon,
+}: {
+  title: string;
+  value: string | number;
+  icon: any;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+  >
+    <Card className="p-4 hover:shadow-lg transition-shadow">
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-stone-100 dark:bg-stone-800">
+          <Icon className="w-5 h-5 text-stone-700 dark:text-stone-300" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm text-stone-500 dark:text-stone-400">{title}</p>
+          <p className="text-xl font-bold text-stone-900 dark:text-white">{value}</p>
+        </div>
+      </div>
+    </Card>
+  </motion.div>
+);
 
 export function WaiterOrdersPage() {
   const orders = useOrderStore((state) => state.orders);
-  const markOrderServed = useOrderStore((state) => state.markOrderServed);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const { markOrderServed } = useOrderStore();
+  const { dateRange } = useAnalyticsStore();
+  const user = useAuthStore((state) => state.user);
 
-  const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
-      const matchesDate = !selectedDate || isSameDay(new Date(order.createdAt), selectedDate);
-      return matchesDate;
-    });
-  }, [orders, selectedDate]);
+  const filteredOrders = useMemo(
+    () => getOrdersInRange(orders, dateRange.start, dateRange.end),
+    [orders, dateRange]
+  );
+
+  const myOrders = useMemo(() => {
+    return user ? filteredOrders.filter((o) => o.waiterName === user.name) : filteredOrders;
+  }, [filteredOrders, user]);
+
+  const stats = useMemo(() => {
+    return {
+      totalOrders: getTotalOrders(myOrders),
+      totalRevenue: getTotalRevenue(myOrders),
+      servedOrders: myOrders.filter((o) => o.status === 'served' || o.status === 'paid').length,
+      pendingOrders: myOrders.filter((o) => o.status === 'pending' || o.status === 'accepted' || o.status === 'preparing' || o.status === 'ready').length,
+    };
+  }, [myOrders]);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div>
-            <CardTitle>Active Orders</CardTitle>
-            <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">Demo orders created from waiter checkout appear here immediately.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-64">
-              <DatePicker selected={selectedDate} onChange={setSelectedDate} />
-            </div>
-            {selectedDate && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSelectedDate(undefined)}
-              >
-                <XCircle className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
+    <div className="flex flex-col gap-6 pb-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-stone-900 dark:text-white">My Dashboard</h1>
+          <p className="text-stone-500 dark:text-stone-400 mt-1">View your orders and performance</p>
         </div>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <tr><Th>Order</Th><Th>Table</Th><Th>Items</Th><Th>Status</Th><Th>Total</Th><Th>Actions</Th></tr>
-          </TableHeader>
-          <TableBody>
-            {filteredOrders.map((order) => (
-              <tr key={order.id}>
-                <Td className="font-medium text-stone-950 dark:text-stone-50">{order.id}</Td>
-                <Td>{order.table}</Td>
-                <Td>{order.items.reduce((sum, item) => sum + item.quantity, 0)}</Td>
-                <Td><Badge variant={getStatusVariant(order.status)}>{order.status}</Badge></Td>
-                <Td>{money(order.total)}</Td>
-                <Td>
-                  {['accepted', 'preparing', 'ready'].includes(order.status) && (
-                    <Button size="sm" variant="outline" onClick={() => markOrderServed(order.id)}>
-                      Mark Served
-                    </Button>
-                  )}
-                </Td>
+        <div className="w-full md:w-auto">
+          <DateRangePicker />
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Orders"
+          value={stats.totalOrders}
+          icon={ShoppingBag}
+        />
+        <StatCard
+          title="Total Revenue"
+          value={formatETB(stats.totalRevenue)}
+          icon={DollarSign}
+        />
+        <StatCard
+          title="Served Orders"
+          value={stats.servedOrders}
+          icon={CheckCircle}
+        />
+        <StatCard
+          title="Pending Orders"
+          value={stats.pendingOrders}
+          icon={Clock}
+        />
+      </div>
+
+      {/* Orders List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Active Orders</CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="border-b border-stone-200 dark:border-stone-800">
+              <tr>
+                <th className="p-4 text-sm font-semibold text-stone-500 dark:text-stone-400">Order</th>
+                <th className="p-4 text-sm font-semibold text-stone-500 dark:text-stone-400">Table</th>
+                <th className="p-4 text-sm font-semibold text-stone-500 dark:text-stone-400">Items</th>
+                <th className="p-4 text-sm font-semibold text-stone-500 dark:text-stone-400">Status</th>
+                <th className="p-4 text-sm font-semibold text-stone-500 dark:text-stone-400">Total</th>
+                <th className="p-4 text-sm font-semibold text-stone-500 dark:text-stone-400">Actions</th>
               </tr>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </thead>
+            <tbody>
+              {myOrders.map((order) => (
+                <tr
+                  key={order.id}
+                  className="border-b border-stone-100 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-900/50 transition-colors"
+                >
+                  <td className="p-4 font-medium text-stone-950 dark:text-stone-50">{order.id}</td>
+                  <td className="p-4">{order.table}</td>
+                  <td className="p-4">{order.items.reduce((sum, item) => sum + item.quantity, 0)}</td>
+                  <td className="p-4">
+                    <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
+                  </td>
+                  <td className="p-4">{formatETB(order.total)}</td>
+                  <td className="p-4">
+                    {['accepted', 'preparing', 'ready'].includes(order.status) && (
+                      <Button size="sm" variant="outline" onClick={() => markOrderServed(order.id)}>
+                        Mark Served
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

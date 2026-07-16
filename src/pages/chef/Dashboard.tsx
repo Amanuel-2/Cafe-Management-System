@@ -8,15 +8,20 @@ import {
   Package,
   Plus,
   Search,
+  ShoppingBag,
+  CheckCircle,
+  TrendingUp,
 } from 'lucide-react';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
-import { DatePicker } from '../../components/ui/DatePicker';
+import { DateRangePicker } from '../../components/ui/DateRangePicker';
 import { useOrderStore } from '../../store/orderStore';
+import { useAnalyticsStore } from '../../store/analyticsStore';
 import type { Order, OrderStatus } from '../../types/domain';
 import { cn } from '../../utils/cn';
+import { getOrdersInRange, getTotalOrders } from '../../utils/analytics';
 
 type Lane = {
   id: OrderStatus | 'served';
@@ -316,10 +321,37 @@ function TabView({ ordersByLane }: {
   );
 }
 
+const StatCard = ({
+  title,
+  value,
+  icon: Icon,
+}: {
+  title: string;
+  value: string | number;
+  icon: any;
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+  >
+    <Card className="p-4 hover:shadow-lg transition-shadow">
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-stone-100 dark:bg-stone-800">
+          <Icon className="w-5 h-5 text-stone-700 dark:text-stone-300" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm text-stone-500 dark:text-stone-400">{title}</p>
+          <p className="text-xl font-bold text-stone-900 dark:text-white">{value}</p>
+        </div>
+      </div>
+    </Card>
+  </motion.div>
+);
+
 export function ChefDashboard() {
   const orders = useOrderStore((state) => state.orders);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const { dateRange } = useAnalyticsStore();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -329,15 +361,15 @@ export function ChefDashboard() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const filteredOrders = useMemo(
+    () => getOrdersInRange(orders, dateRange.start, dateRange.end),
+    [orders, dateRange]
+  );
+
   const ordersByLane = useMemo(() => {
-    const filtered = orders.filter(order => {
-      const orderDate = new Date(order.createdAt);
-      const matchesDate = 
-        orderDate.getDate() === selectedDate.getDate() &&
-        orderDate.getMonth() === selectedDate.getMonth() &&
-        orderDate.getFullYear() === selectedDate.getFullYear();
+    const filtered = filteredOrders.filter(order => {
       const matchesSearch = !searchQuery || order.id.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesDate && matchesSearch;
+      return matchesSearch;
     });
     return filtered.reduce((acc, order) => {
       let key: Lane['id'] = order.status as Lane['id'];
@@ -350,11 +382,20 @@ export function ChefDashboard() {
       acc[key].push(order);
       return acc;
     }, {} as Record<Lane['id'], Order[]>);
-  }, [orders, searchQuery, selectedDate]);
+  }, [filteredOrders, searchQuery]);
+
+  const stats = useMemo(() => {
+    return {
+      totalOrders: getTotalOrders(filteredOrders),
+      pendingOrders: filteredOrders.filter(o => o.status === 'pending').length,
+      preparingOrders: filteredOrders.filter(o => o.status === 'accepted' || o.status === 'preparing' || o.status === 'ready').length,
+      completedOrders: filteredOrders.filter(o => o.status === 'served' || o.status === 'paid').length,
+    };
+  }, [filteredOrders]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+    <div className="flex flex-col h-full gap-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-stone-900 dark:text-white">Kitchen Display</h1>
           <p className="text-stone-500 dark:text-stone-400 mt-1">Manage orders efficiently</p>
@@ -365,8 +406,31 @@ export function ChefDashboard() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <DatePicker selected={selectedDate} onChange={setSelectedDate} />
+          <DateRangePicker />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Orders"
+          value={stats.totalOrders}
+          icon={ShoppingBag}
+        />
+        <StatCard
+          title="Pending"
+          value={stats.pendingOrders}
+          icon={Clock}
+        />
+        <StatCard
+          title="Preparing"
+          value={stats.preparingOrders}
+          icon={ChefHat}
+        />
+        <StatCard
+          title="Completed"
+          value={stats.completedOrders}
+          icon={CheckCircle}
+        />
       </div>
 
       <div className="flex-1 overflow-hidden">
