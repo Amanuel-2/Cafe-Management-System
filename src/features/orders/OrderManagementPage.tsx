@@ -32,10 +32,7 @@ import { useOrderStore } from '../../store/orderStore';
 import { useAuthStore } from '../../store/authStore';
 import type { Order, OrderStatus, PaymentStatus, PaymentMethod } from '../../types/domain';
 import { cn } from '../../utils/cn';
-
-const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-};
+import { formatETB } from '../../utils/currency';
 
 const formatTime = (dateString: string): string => {
   return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -163,7 +160,7 @@ export function OrderManagementPage() {
                   <p className="text-sm text-stone-500 dark:text-stone-400">{label}</p>
                   <p className="text-xl font-bold text-stone-900 dark:text-white">
                     {key.includes('Revenue')
-                      ? formatCurrency(summaryStats[key as keyof typeof summaryStats])
+                      ? formatETB(summaryStats[key as keyof typeof summaryStats])
                       : summaryStats[key as keyof typeof summaryStats]}
                   </p>
                 </div>
@@ -258,7 +255,7 @@ export function OrderManagementPage() {
                     {order.items.length}
                   </td>
                   <td className="p-4 font-semibold text-stone-900 dark:text-white">
-                    {formatCurrency(order.total)}
+                    {formatETB(order.total)}
                   </td>
                   <td className="p-4">
                     <Badge variant={getStatusVariant(order.status)}>
@@ -300,7 +297,7 @@ export function OrderManagementPage() {
             </div>
             <div className="flex items-center justify-between text-sm text-stone-500 dark:text-stone-400 mb-3">
               <span>Waiter: {order.waiterName}</span>
-              <span>Total: {formatCurrency(order.total)}</span>
+              <span>Total: {formatETB(order.total)}</span>
             </div>
             <div className="flex items-center justify-between">
               <Badge variant={getStatusVariant(order.paymentStatus)}>
@@ -401,9 +398,9 @@ export function OrderManagementPage() {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <p className="font-medium text-stone-900 dark:text-white">{item.quantity} × {item.name}</p>
-                          <p className="font-semibold text-stone-900 dark:text-white">{formatCurrency(item.price * item.quantity)}</p>
+                          <p className="font-semibold text-stone-900 dark:text-white">{formatETB(item.price * item.quantity)}</p>
                         </div>
-                        <p className="text-sm text-stone-500 dark:text-stone-400">{formatCurrency(item.price)} each</p>
+                        <p className="text-sm text-stone-500 dark:text-stone-400">{formatETB(item.price)} each</p>
                       </div>
                     </div>
                   ))}
@@ -464,21 +461,21 @@ export function OrderManagementPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-stone-500 dark:text-stone-400">Subtotal</span>
-                    <span className="font-medium">{formatCurrency(selectedOrder.subtotal)}</span>
+                    <span className="font-medium">{formatETB(selectedOrder.subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-stone-500 dark:text-stone-400">Tax</span>
-                    <span className="font-medium">{formatCurrency(selectedOrder.tax)}</span>
+                    <span className="font-medium">{formatETB(selectedOrder.tax)}</span>
                   </div>
                   {selectedOrder.discount > 0 && (
                     <div className="flex justify-between">
                       <span className="text-stone-500 dark:text-stone-400">Discount</span>
-                      <span className="font-medium text-green-600">-{formatCurrency(selectedOrder.discount)}</span>
+                      <span className="font-medium text-green-600">-{formatETB(selectedOrder.discount)}</span>
                     </div>
                   )}
                   <div className="border-t border-stone-200 dark:border-stone-800 pt-2 flex justify-between">
                     <span className="font-semibold text-stone-900 dark:text-white">Total</span>
-                    <span className="font-bold text-xl text-stone-900 dark:text-white">{formatCurrency(selectedOrder.total)}</span>
+                    <span className="font-bold text-xl text-stone-900 dark:text-white">{formatETB(selectedOrder.total)}</span>
                   </div>
                 </div>
               </Card>

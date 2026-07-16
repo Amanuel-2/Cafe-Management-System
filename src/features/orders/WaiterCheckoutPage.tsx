@@ -11,15 +11,12 @@ import { useAuthStore } from '../../store/authStore';
 import { useOrderStore } from '../../store/orderStore';
 import { mapCartItemsToOrderItems, useWaiterCartStore } from '../../store/waiterCartStore';
 import { useState } from 'react';
+import { formatETB } from '../../utils/currency';
 
 const tableOptions = Array.from({ length: 12 }, (_, index) => {
   const table = `T-${String(index + 1).padStart(2, '0')}`;
   return { label: table, value: table };
 });
-
-function money(value: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
-}
 
 export function WaiterCheckoutPage() {
   const user = useAuthStore((state) => state.user);
@@ -60,7 +57,7 @@ export function WaiterCheckoutPage() {
                   <div className="space-y-3">
                     <div>
                       <h3 className="font-semibold text-stone-950 dark:text-stone-50">{item.name}</h3>
-                      <p className="text-sm text-stone-500 dark:text-stone-400">{money(item.price)} each</p>
+                      <p className="text-sm text-stone-500 dark:text-stone-400">{formatETB(item.price)} each</p>
                     </div>
                     <Textarea
                       value={item.notes ?? ''}
@@ -91,9 +88,9 @@ export function WaiterCheckoutPage() {
             <Select label="Table" value={table} onChange={(event) => setTable(event.target.value)} options={tableOptions} />
             <Input label="Payment method" value="Demo card ending 4242" readOnly />
             <div className="space-y-2 border-t border-stone-200 pt-4 text-sm dark:border-stone-800">
-              <div className="flex justify-between"><span>Subtotal</span><span>{money(subtotal)}</span></div>
-              <div className="flex justify-between"><span>Service demo</span><span>{money(serviceFee)}</span></div>
-              <div className="flex justify-between text-lg font-semibold text-stone-950 dark:text-stone-50"><span>Total</span><span>{money(total)}</span></div>
+              <div className="flex justify-between"><span>Subtotal</span><span>{formatETB(subtotal)}</span></div>
+              <div className="flex justify-between"><span>Service demo</span><span>{formatETB(serviceFee)}</span></div>
+              <div className="flex justify-between text-lg font-semibold text-stone-950 dark:text-stone-50"><span>Total</span><span>{formatETB(total)}</span></div>
             </div>
             <Button className="w-full" size="lg" Icon={CreditCard} disabled={items.length === 0} onClick={submitOrder}>Place demo order</Button>
           </CardContent>

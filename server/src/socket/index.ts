@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { orderService } from '../services/orderService';
 import { notificationService } from '../services/notificationService';
+import { menuService } from '../services/menuService';
 
 export const setupSocket = (io: Server) => {
   io.on('connection', (socket: Socket) => {
@@ -37,6 +38,32 @@ export const setupSocket = (io: Server) => {
         io.emit('order:updated', order);
         if (notification) io.emit('notification:new', notification);
         io.emit('dashboard:update', stats);
+      }
+    });
+
+    socket.on('menu:create', (data: any) => {
+      const item = menuService.addItem(data);
+      io.emit('menu:created', item);
+    });
+
+    socket.on('menu:update', (data: { id: string; [key: string]: any }) => {
+      const item = menuService.updateItem(data.id, data);
+      if (item) {
+        io.emit('menu:updated', item);
+      }
+    });
+
+    socket.on('menu:delete', (id: string) => {
+      const success = menuService.removeItem(id);
+      if (success) {
+        io.emit('menu:deleted', id);
+      }
+    });
+
+    socket.on('menu:availability', (data: { id: string; available: boolean }) => {
+      const item = menuService.setAvailability(data.id, data.available);
+      if (item) {
+        io.emit('menu:availability:updated', item);
       }
     });
 

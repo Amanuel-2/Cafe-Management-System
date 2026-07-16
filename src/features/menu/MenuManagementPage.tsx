@@ -16,6 +16,7 @@ import { Table, TableBody, TableHeader, Td, Th } from '../../components/ui/Table
 import { useMenuStore } from '../../store/menuStore';
 import type { MenuItem } from '../../types/domain';
 import { cn } from '../../utils/cn';
+import { formatETB } from '../../utils/currency';
 
 const menuItemSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -36,10 +37,6 @@ const emptyValues: MenuItemForm = {
   image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=500&q=80',
   available: true,
 };
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
-}
 
 export function MenuManagementPage() {
   const { categories, menuItems, addMenuItem, updateMenuItem, removeMenuItem, setAvailability } = useMenuStore();
@@ -89,7 +86,7 @@ export function MenuManagementPage() {
       <section className="grid gap-4 md:grid-cols-3">
         <StatCard label="Menu items" value={String(menuItems.length)} change={`${availableCount} available`} />
         <StatCard label="Categories" value={String(categories.length)} change="Active menu groups" />
-        <StatCard label="Average price" value={formatCurrency(averagePrice)} change="Across all items" />
+        <StatCard label="Average price" value={formatETB(averagePrice)} change="Across all items" />
       </section>
 
       <Card>
@@ -141,7 +138,7 @@ export function MenuManagementPage() {
                         <h3 className="font-semibold text-stone-950 dark:text-stone-50">{item.name}</h3>
                         <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">{item.prepTimeMinutes} min prep</p>
                       </div>
-                      <Badge>{formatCurrency(item.price)}</Badge>
+                      <Badge>{formatETB(item.price)}</Badge>
                     </div>
                     <div className="flex items-center justify-between">
                       <Badge className={category?.color}>{category?.name ?? 'Uncategorized'}</Badge>
@@ -181,7 +178,7 @@ export function MenuManagementPage() {
                         </div>
                       </Td>
                       <Td>{category?.name ?? 'Uncategorized'}</Td>
-                      <Td>{formatCurrency(item.price)}</Td>
+                      <Td>{formatETB(item.price)}</Td>
                       <Td>{item.prepTimeMinutes} min</Td>
                       <Td><Badge variant={item.available ? 'success' : 'neutral'}>{item.available ? 'Available' : 'Hidden'}</Badge></Td>
                       <Td>

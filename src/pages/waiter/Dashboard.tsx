@@ -2,12 +2,14 @@ import { Plus, ShoppingCart } from 'lucide-react';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { DatePicker } from '../../components/ui/DatePicker';
 import { useMenuStore } from '../../store/menuStore';
 import { useOrderStore } from '../../store/orderStore';
 import { useWaiterCartStore } from '../../store/waiterCartStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatETB } from '../../utils/currency';
 
 function AnimatedAddButton({ onClick, item }: { onClick: () => void; item: any }) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -136,7 +138,7 @@ function FloatingOrderSummary() {
                 transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                 className="font-semibold text-stone-900 dark:text-white"
               >
-                ${totalPrice.toFixed(2)}
+                {formatETB(totalPrice)}
               </motion.span>
             </div>
           </div>
@@ -154,10 +156,28 @@ export function WaiterDashboard() {
   const orders = useOrderStore((state) => state.orders);
   const { addItem } = useWaiterCartStore();
   const cartItems = useWaiterCartStore((state) => state.items);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      const orderDate = new Date(order.createdAt);
+      return (
+        orderDate.getDate() === selectedDate.getDate() &&
+        orderDate.getMonth() === selectedDate.getMonth() &&
+        orderDate.getFullYear() === selectedDate.getFullYear()
+      );
+    });
+  }, [orders, selectedDate]);
 
   return (
     <div className="grid gap-5 xl:grid-cols-[1fr_360px] pb-24">
       <section className="space-y-5">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Menu</h1>
+          <div className="w-64">
+            <DatePicker selected={selectedDate} onChange={setSelectedDate} />
+          </div>
+        </div>
         <div className="flex flex-wrap gap-3">
           {categories.map((category) => <button key={category.id} className={`min-h-14 rounded-lg px-5 text-base font-semibold ${category.color}`}>{category.name}</button>)}
         </div>
@@ -168,7 +188,7 @@ export function WaiterDashboard() {
               <div className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div><h2 className="text-lg font-semibold">{item.name}</h2><p className="text-sm text-stone-500">{item.prepTimeMinutes} min</p></div>
-                  <Badge>${item.price.toFixed(2)}</Badge>
+                  <Badge>{formatETB(item.price)}</Badge>
                 </div>
                 <AnimatedAddButton onClick={() => addItem(item)} item={item} />
               </div>
@@ -178,7 +198,7 @@ export function WaiterDashboard() {
       </section>
       <aside className="space-y-3">
         <h2 className="text-lg font-semibold">Active Tables</h2>
-        {orders.map((order) => (
+        {filteredOrders.map((order) => (
           <Card key={order.id} className="p-4">
             <div className="flex items-center justify-between">
               <div><p className="font-semibold">{order.table}</p><p className="text-sm text-stone-500">{order.items.length} items</p></div>
@@ -193,3 +213,4 @@ export function WaiterDashboard() {
     </div>
   );
 }
+

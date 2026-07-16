@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { useThemeStore } from '../store/themeStore';
 import { useOrderSocketSync } from '../store/orderStore';
+import { useMenuStore, useMenuSocketSync } from '../store/menuStore';
 
 const queryClient = new QueryClient();
 
@@ -21,12 +22,30 @@ function OrderSocketSync() {
   return null;
 }
 
+function MenuSocketSync() {
+  useMenuSocketSync();
+  return null;
+}
+
+function MenuInitialLoad() {
+  const { fetchMenu } = useMenuStore();
+
+  useEffect(() => {
+    fetchMenu();
+  }, [fetchMenu]);
+
+  return null;
+}
+
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeEffect />
       <OrderSocketSync />
+      <MenuSocketSync />
+      <MenuInitialLoad />
       {children}
     </QueryClientProvider>
   );
 }
+

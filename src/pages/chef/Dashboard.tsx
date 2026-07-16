@@ -13,6 +13,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
+import { DatePicker } from '../../components/ui/DatePicker';
 import { useOrderStore } from '../../store/orderStore';
 import type { Order, OrderStatus } from '../../types/domain';
 import { cn } from '../../utils/cn';
@@ -318,6 +319,7 @@ function TabView({ ordersByLane }: {
 export function ChefDashboard() {
   const orders = useOrderStore((state) => state.orders);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -328,9 +330,15 @@ export function ChefDashboard() {
   }, []);
 
   const ordersByLane = useMemo(() => {
-    const filtered = orders.filter(order =>
-      !searchQuery || order.id.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filtered = orders.filter(order => {
+      const orderDate = new Date(order.createdAt);
+      const matchesDate = 
+        orderDate.getDate() === selectedDate.getDate() &&
+        orderDate.getMonth() === selectedDate.getMonth() &&
+        orderDate.getFullYear() === selectedDate.getFullYear();
+      const matchesSearch = !searchQuery || order.id.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesDate && matchesSearch;
+    });
     return filtered.reduce((acc, order) => {
       let key: Lane['id'] = order.status as Lane['id'];
       if (key === 'accepted') {
@@ -342,21 +350,22 @@ export function ChefDashboard() {
       acc[key].push(order);
       return acc;
     }, {} as Record<Lane['id'], Order[]>);
-  }, [orders, searchQuery]);
+  }, [orders, searchQuery, selectedDate]);
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-6 gap-4">
+      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-stone-900 dark:text-white">Kitchen Display</h1>
           <p className="text-stone-500 dark:text-stone-400 mt-1">Manage orders efficiently</p>
         </div>
-        <div className="w-full max-w-sm">
+        <div className="flex flex-col sm:flex-row gap-2 w-full max-w-lg">
           <Input
             placeholder="Search order number..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          <DatePicker selected={selectedDate} onChange={setSelectedDate} />
         </div>
       </div>
 

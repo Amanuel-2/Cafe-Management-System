@@ -15,6 +15,7 @@ const categories: MenuCategory[] = [
   { id: 'breakfast', name: 'Breakfast', color: 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200' },
   { id: 'lunch', name: 'Lunch', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200' },
   { id: 'dessert', name: 'Dessert', color: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-200' },
+  { id: 'drinks', name: 'Drinks', color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-200' },
 ];
 
 export const menuItems: MenuItem[] = [
@@ -22,6 +23,22 @@ export const menuItems: MenuItem[] = [
   { id: 'm2', name: 'Avocado Toast', categoryId: 'breakfast', price: 9.75, image: 'https://images.unsplash.com/photo-1603046891744-1f76eb10aec5?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 8 },
   { id: 'm3', name: 'Chicken Panini', categoryId: 'lunch', price: 12.5, image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 12 },
   { id: 'm4', name: 'Berry Tart', categoryId: 'dessert', price: 6.25, image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 4 },
+  { id: 'm5', name: 'Espresso', categoryId: 'coffee', price: 3.0, image: 'https://images.unsplash.com/photo-1510591509098-f4fdc6d70ca8?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 2 },
+  { id: 'm6', name: 'Latte', categoryId: 'coffee', price: 5.0, image: 'https://images.unsplash.com/photo-1572119865084-43c285814d63?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 4 },
+  { id: 'm7', name: 'Mocha', categoryId: 'coffee', price: 5.5, image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 5 },
+  { id: 'm8', name: 'Americano', categoryId: 'coffee', price: 3.5, image: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 2 },
+  { id: 'm9', name: 'Pancakes', categoryId: 'breakfast', price: 8.5, image: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 10 },
+  { id: 'm10', name: 'French Toast', categoryId: 'breakfast', price: 9.0, image: 'https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 9 },
+  { id: 'm11', name: 'Egg Benedict', categoryId: 'breakfast', price: 11.0, image: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 12 },
+  { id: 'm12', name: 'Caesar Salad', categoryId: 'lunch', price: 10.0, image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 8 },
+  { id: 'm13', name: 'Margherita Pizza', categoryId: 'lunch', price: 14.0, image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 15 },
+  { id: 'm14', name: 'Club Sandwich', categoryId: 'lunch', price: 11.5, image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 10 },
+  { id: 'm15', name: 'Chocolate Cake', categoryId: 'dessert', price: 7.0, image: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 6 },
+  { id: 'm16', name: 'Tiramisu', categoryId: 'dessert', price: 7.5, image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 5 },
+  { id: 'm17', name: 'Ice Cream Sundae', categoryId: 'dessert', price: 6.5, image: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 3 },
+  { id: 'm18', name: 'Fresh Orange Juice', categoryId: 'drinks', price: 4.0, image: 'https://images.unsplash.com/photo-1502005097973-6a7082348e28?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 2 },
+  { id: 'm19', name: 'Iced Tea', categoryId: 'drinks', price: 3.5, image: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 1 },
+  { id: 'm20', name: 'Smoothie', categoryId: 'drinks', price: 5.5, image: 'https://images.unsplash.com/photo-1505252585461-04db1eb84625?auto=format&fit=crop&w=500&q=80', available: true, prepTimeMinutes: 3 },
 ];
 
 const generateTimeline = (order: Partial<Order>): TimelineEvent[] => {

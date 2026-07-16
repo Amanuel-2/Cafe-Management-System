@@ -5,4 +5,5 @@ const SOCKET_URL = '';
 export const socket = io(SOCKET_URL, {
   autoConnect: true,
   transports: ['websocket', 'polling'],
+  path: '/socket.io',
 });
