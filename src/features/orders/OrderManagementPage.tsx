@@ -28,7 +28,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Drawer } from '../../components/ui/Drawer';
 import { Select } from '../../components/ui/Select';
-import { useOrderStore } from '../../store/orderStore';
+import { useOrderStore, useOrderSocketSync } from '../../store/orderStore';
 import { useAuthStore } from '../../store/authStore';
 import type { Order, OrderStatus, PaymentStatus, PaymentMethod } from '../../types/domain';
 import { cn } from '../../utils/cn';
@@ -80,6 +80,7 @@ const SUMMARY_ICONS = [
 ];
 
 export function OrderManagementPage() {
+  useOrderSocketSync();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('all');

@@ -13,7 +13,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
-import { useOrderStore } from '../../store/orderStore';
+import { useOrderStore, useOrderSocketSync } from '../../store/orderStore';
 import type { Order, OrderStatus } from '../../types/domain';
 import { cn } from '../../utils/cn';
 
@@ -316,6 +316,7 @@ function TabView({ ordersByLane }: {
 }
 
 export function ChefDashboard() {
+  useOrderSocketSync();
   const orders = useOrderStore((state) => state.orders);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobile, setIsMobile] = useState(false);

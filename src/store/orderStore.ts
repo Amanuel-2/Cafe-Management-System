@@ -1,11 +1,13 @@
 import { create } from 'zustand';
-import { orders as initialOrders } from '../mock/data';
-import type { ItemStatus, Order, OrderStatus, PaymentStatus, PaymentMethod } from '../types/domain';
+import { socket } from '../services/socket';
+import type { ItemStatus, Order, OrderStatus, PaymentMethod } from '../types/domain';
+import { useEffect } from 'react';
 
 type OrderState = {
   orders: Order[];
-  addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'timeline'>) => Order;
-  updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  setOrders: (orders: Order[]) => void;
+  addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'timeline' | 'receiptNumber' | 'subtotal' | 'tax' | 'discount' | 'total' | 'status' | 'paymentStatus'>) => Promise<Order>;
+  updateOrderStatus: (orderId: string, status: OrderStatus, collectedBy?: string) => void;
   updateItemStatus: (orderId: string, itemId: string, status: ItemStatus) => void;
   acceptOrder: (orderId: string) => void;
   markOrderReady: (orderId: string) => void;
@@ -14,130 +16,81 @@ type OrderState = {
   cancelOrder: (orderId: string) => void;
 };
 
-function generateReceiptNumber(): string {
-  return `RCP-${Date.now()}`;
-}
-
 export const useOrderStore = create<OrderState>((set, get) => ({
-  orders: initialOrders,
-  addOrder: (orderData) => {
-    const now = new Date().toISOString();
-    const nextOrder: Order = {
-      ...orderData,
-      id: `ORD-${Math.floor(1100 + Math.random() * 9000)}`,
-      receiptNumber: generateReceiptNumber(),
-      createdAt: now,
-      status: 'pending',
-      paymentStatus: 'unpaid',
-      paymentMethod: 'cash',
-      subtotal: orderData.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-      tax: orderData.items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 0.08,
-      discount: 0,
-      total: orderData.items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 1.08,
-      timeline: [{
-        id: `t-${Date.now()}`,
-        title: 'Order Created',
-        timestamp: now,
-        completed: true
-      }]
-    };
-    set((state) => ({ orders: [nextOrder, ...state.orders] }));
-    return nextOrder;
+  orders: [],
+  setOrders: (orders) => set({ orders }),
+
+  addOrder: async (orderData) => {
+    socket.emit('order:create', orderData);
+    const newOrder = await new Promise<Order>((resolve) => {
+      const handler = (order: Order) => {
+        resolve(order);
+        socket.off('order:created', handler);
+      };
+      socket.on('order:created', handler);
+    });
+    return newOrder;
   },
-  updateOrderStatus: (orderId, status) =>
-    set((state) => ({
-      orders: state.orders.map((order) => (order.id === orderId ? { ...order, status } : order)),
-    })),
-  updateItemStatus: (orderId, itemId, status) =>
-    set((state) => ({
-      orders: state.orders.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              items: order.items.map((item) => item.id === itemId ? { ...item, status } : item),
-            }
-          : order,
-      ),
-    })),
-  acceptOrder: (orderId) =>
-    set((state) => ({
-      orders: state.orders.map((order) => {
-        if (order.id !== orderId) return order;
-        const now = new Date().toISOString();
-        return {
-          ...order,
-          status: 'accepted',
-          acceptedAt: now,
-          timeline: [
-            ...order.timeline,
-            { id: `t-${Date.now()}`, title: 'Order Accepted', timestamp: now, completed: true }
-          ]
-        };
-      }),
-    })),
-  markOrderReady: (orderId) =>
-    set((state) => ({
-      orders: state.orders.map((order) => {
-        if (order.id !== orderId) return order;
-        const now = new Date().toISOString();
-        return {
-          ...order,
-          status: 'ready',
-          readyAt: now,
-          timeline: [
-            ...order.timeline,
-            { id: `t-${Date.now()}`, title: 'Order Ready', timestamp: now, completed: true }
-          ]
-        };
-      }),
-    })),
-  markOrderServed: (orderId) =>
-    set((state) => ({
-      orders: state.orders.map((order) => {
-        if (order.id !== orderId) return order;
-        const now = new Date().toISOString();
-        return {
-          ...order,
-          status: 'served',
-          servedAt: now,
-          timeline: [
-            ...order.timeline,
-            { id: `t-${Date.now()}`, title: 'Order Served', timestamp: now, completed: true }
-          ]
-        };
-      }),
-    })),
-  markOrderPaid: (orderId, paymentMethod, collectedBy) =>
-    set((state) => ({
-      orders: state.orders.map((order) => {
-        if (order.id !== orderId) return order;
-        const now = new Date().toISOString();
-        return {
-          ...order,
-          paymentStatus: 'paid',
-          paymentMethod,
-          paidAt: now,
-          collectedBy,
-          timeline: [
-            ...order.timeline,
-            { id: `t-${Date.now()}`, title: 'Payment Received', timestamp: now, completed: true }
-          ]
-        };
-      }),
-    })),
-  cancelOrder: (orderId) =>
-    set((state) => ({
-      orders: state.orders.map((order) => {
-        if (order.id !== orderId) return order;
-        const now = new Date().toISOString();
-        return {
-          ...order,
-          status: 'cancelled',
-          timeline: [
-            ...order.timeline,
-            { id: `t-${Date.now()}`, title: 'Order Cancelled', timestamp: now, completed: true }
-          ]
-        };
-      }),
-    })),
+
+  updateOrderStatus: (orderId, status, collectedBy) => {
+    socket.emit('order:update', { id: orderId, status, collectedBy });
+  },
+
+  updateItemStatus: (orderId, itemId, status) => {
+    socket.emit('order:update', { id: orderId, itemId, itemStatus: status });
+  },
+
+  acceptOrder: (orderId) => {
+    socket.emit('order:update', { id: orderId, status: 'accepted' });
+  },
+
+  markOrderReady: (orderId) => {
+    socket.emit('order:update', { id: orderId, status: 'ready' });
+  },
+
+  markOrderServed: (orderId) => {
+    socket.emit('order:update', { id: orderId, status: 'served' });
+  },
+
+  markOrderPaid: (orderId, paymentMethod, collectedBy) => {
+    socket.emit('order:update', { id: orderId, paymentStatus: 'paid', paymentMethod, collectedBy });
+  },
+
+  cancelOrder: (orderId) => {
+    socket.emit('order:update', { id: orderId, status: 'cancelled' });
+  },
 }));
+
+export function useOrderSocketSync() {
+  const { setOrders } = useOrderStore();
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const res = await fetch('http://localhost:3003/api/orders');
+        const data = await res.json();
+        setOrders(data);
+      } catch (err) {
+        console.error('Failed to fetch orders:', err);
+      }
+    };
+
+    fetchOrders();
+
+    const handleOrderCreated = (order: Order) => {
+      setOrders(prev => [order, ...prev]);
+    };
+
+    const handleOrderUpdated = (updatedOrder: Order) => {
+      setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+    };
+
+    socket.on('order:created', handleOrderCreated);
+    socket.on('order:updated', handleOrderUpdated);
+
+    return () => {
+      socket.off('order:created', handleOrderCreated);
+      socket.off('order:updated', handleOrderUpdated);
+    };
+  }, [setOrders]);
+}
