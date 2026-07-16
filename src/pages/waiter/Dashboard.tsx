@@ -4,10 +4,12 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { useMenuStore } from '../../store/menuStore';
 import { useOrderStore } from '../../store/orderStore';
+import { useWaiterCartStore } from '../../store/waiterCartStore';
 
 export function WaiterDashboard() {
   const { categories, menuItems } = useMenuStore();
   const orders = useOrderStore((state) => state.orders);
+  const { addItem } = useWaiterCartStore();
 
   return (
     <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
@@ -24,7 +26,7 @@ export function WaiterDashboard() {
                   <div><h2 className="text-lg font-semibold">{item.name}</h2><p className="text-sm text-stone-500">{item.prepTimeMinutes} min</p></div>
                   <Badge>${item.price.toFixed(2)}</Badge>
                 </div>
-                <Button className="mt-4 w-full" size="lg" Icon={Plus}>Add</Button>
+                <Button className="mt-4 w-full" size="lg" Icon={Plus} onClick={() => addItem(item)}>Add</Button>
               </div>
             </Card>
           ))}

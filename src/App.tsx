@@ -6,9 +6,17 @@ import { WaiterLayout } from './layouts/WaiterLayout';
 import { AdminDashboard } from './pages/admin/Dashboard';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { ChefDashboard } from './pages/chef/Dashboard';
+import { MenuManagementPage } from './features/menu/MenuManagementPage';
 import { LoginPage } from './pages/auth/Login';
 import { NotFound } from './pages/NotFound';
 import { WaiterDashboard } from './pages/waiter/Dashboard';
+import { WaiterOrdersPage } from './features/orders/WaiterOrdersPage';
+import { WaiterCheckoutPage } from './features/orders/WaiterCheckoutPage';
+import { InventoryPage } from './features/inventory/InventoryPage';
+import { EmployeesPage } from './features/employees/EmployeesPage';
+import { RecipesPage } from './features/recipes/RecipesPage';
+import { ReportsPage } from './features/reports/ReportsPage';
+import { SuppliersPage } from './features/suppliers/SuppliersPage';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { RoleRedirect } from './routes/RoleRedirect';
 import { UserRole } from './types/auth';
@@ -30,13 +38,13 @@ export default function App() {
           }
         >
           <Route index element={<AdminDashboard />} />
-          <Route path="menu" element={<PlaceholderPage title="Menu Management" description="Manage categories, pricing, modifiers, and item availability." />} />
+          <Route path="menu" element={<MenuManagementPage />} />
           <Route path="orders" element={<PlaceholderPage title="Order Management" description="Review dine-in, pickup, and completed order activity." />} />
-          <Route path="inventory" element={<PlaceholderPage title="Inventory" description="Track stock, par levels, suppliers, and purchasing needs." />} />
-          <Route path="employees" element={<PlaceholderPage title="Employee Management" description="Manage staff profiles, roles, shifts, and access." />} />
-          <Route path="reports" element={<PlaceholderPage title="Reports" description="Analyze sales, product mix, labor, and operational trends." />} />
-          <Route path="recipes" element={<PlaceholderPage title="Recipes" description="Connect menu items to preparation notes and ingredient usage." />} />
-          <Route path="suppliers" element={<PlaceholderPage title="Suppliers" description="Maintain supplier contacts and purchase history." />} />
+          <Route path="inventory" element={<InventoryPage />} />
+          <Route path="employees" element={<EmployeesPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="recipes" element={<RecipesPage />} />
+          <Route path="suppliers" element={<SuppliersPage />} />
           <Route path="settings" element={<PlaceholderPage title="Settings" description="Configure cafe preferences, taxes, service areas, and devices." />} />
         </Route>
 
@@ -50,8 +58,8 @@ export default function App() {
         >
           <Route index element={<WaiterDashboard />} />
           <Route path="menu" element={<WaiterDashboard />} />
-          <Route path="orders" element={<PlaceholderPage title="Active Orders" description="Fast order review and table handoff tools." />} />
-          <Route path="checkout" element={<PlaceholderPage title="Checkout" description="Payment flow will be connected when a backend is available." />} />
+          <Route path="orders" element={<WaiterOrdersPage />} />
+          <Route path="checkout" element={<WaiterCheckoutPage />} />
         </Route>
 
         <Route
