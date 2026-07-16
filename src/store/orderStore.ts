@@ -77,7 +77,7 @@ export function useOrderSocketSync() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await fetch('http://localhost:3003/api/orders');
+        const res = await fetch('/api/orders');
         const data = await res.json();
         setOrders(data);
       } catch (err) {

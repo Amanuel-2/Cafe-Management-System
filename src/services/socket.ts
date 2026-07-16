@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:3003';
+// Use relative path through Vite proxy (dev) or same host (prod)
+const SOCKET_URL = '';
 export const socket = io(SOCKET_URL, {
   autoConnect: true,
   transports: ['websocket', 'polling'],
