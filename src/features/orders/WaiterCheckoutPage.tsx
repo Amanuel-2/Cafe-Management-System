@@ -11,7 +11,6 @@ import { useAuthStore } from '../../store/authStore';
 import { useOrderStore } from '../../store/orderStore';
 import { mapCartItemsToOrderItems, useWaiterCartStore } from '../../store/waiterCartStore';
 import { useState } from 'react';
-import { useOrderSocketSync } from '../../store/orderStore';
 
 const tableOptions = Array.from({ length: 12 }, (_, index) => {
   const table = `T-${String(index + 1).padStart(2, '0')}`;
@@ -23,7 +22,6 @@ function money(value: number) {
 }
 
 export function WaiterCheckoutPage() {
-  useOrderSocketSync();
   const user = useAuthStore((state) => state.user);
   const addOrder = useOrderStore((state) => state.addOrder);
   const { table, items, setTable, incrementItem, decrementItem, removeItem, updateNotes, clearCart } = useWaiterCartStore();

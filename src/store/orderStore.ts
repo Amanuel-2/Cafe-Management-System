@@ -6,6 +6,8 @@ import { useEffect } from 'react';
 type OrderState = {
   orders: Order[];
   setOrders: (orders: Order[]) => void;
+  prependOrder: (order: Order) => void;
+  upsertOrder: (order: Order) => void;
   addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'timeline' | 'receiptNumber' | 'subtotal' | 'tax' | 'discount' | 'total' | 'status' | 'paymentStatus'>) => Promise<Order>;
   updateOrderStatus: (orderId: string, status: OrderStatus, collectedBy?: string) => void;
   updateItemStatus: (orderId: string, itemId: string, status: ItemStatus) => void;
@@ -16,9 +18,15 @@ type OrderState = {
   cancelOrder: (orderId: string) => void;
 };
 
-export const useOrderStore = create<OrderState>((set, get) => ({
+export const useOrderStore = create<OrderState>((set) => ({
   orders: [],
   setOrders: (orders) => set({ orders }),
+  prependOrder: (order) => set((state) => ({ orders: [order, ...state.orders] })),
+  upsertOrder: (order) => set((state) => ({
+    orders: state.orders.some((existingOrder) => existingOrder.id === order.id)
+      ? state.orders.map((existingOrder) => existingOrder.id === order.id ? order : existingOrder)
+      : [order, ...state.orders],
+  })),
 
   addOrder: async (orderData) => {
     socket.emit('order:create', orderData);
@@ -41,7 +49,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   },
 
   acceptOrder: (orderId) => {
-    socket.emit('order:update', { id: orderId, status: 'accepted' });
+    socket.emit('order:update', { id: orderId, status: 'preparing' });
   },
 
   markOrderReady: (orderId) => {
@@ -62,7 +70,9 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 }));
 
 export function useOrderSocketSync() {
-  const { setOrders } = useOrderStore();
+  const setOrders = useOrderStore((state) => state.setOrders);
+  const prependOrder = useOrderStore((state) => state.prependOrder);
+  const upsertOrder = useOrderStore((state) => state.upsertOrder);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -78,11 +88,11 @@ export function useOrderSocketSync() {
     fetchOrders();
 
     const handleOrderCreated = (order: Order) => {
-      setOrders(prev => [order, ...prev]);
+      prependOrder(order);
     };
 
     const handleOrderUpdated = (updatedOrder: Order) => {
-      setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+      upsertOrder(updatedOrder);
     };
 
     socket.on('order:created', handleOrderCreated);
@@ -92,5 +102,5 @@ export function useOrderSocketSync() {
       socket.off('order:created', handleOrderCreated);
       socket.off('order:updated', handleOrderUpdated);
     };
-  }, [setOrders]);
+  }, [prependOrder, setOrders, upsertOrder]);
 }

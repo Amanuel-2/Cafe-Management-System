@@ -50,15 +50,14 @@ export const orderService = {
 
     switch (status) {
       case 'accepted':
-        updates.acceptedAt = now;
-        newEvents.push({ id: `t-${Date.now()}`, title: 'Chef Accepted', timestamp: now, completed: true });
-        break;
       case 'preparing':
         if (!order.acceptedAt) {
           updates.acceptedAt = now;
           newEvents.push({ id: `t-${Date.now()}`, title: 'Chef Accepted', timestamp: now, completed: true });
         }
-        newEvents.push({ id: `t-${Date.now() + 1}`, title: 'Preparing', timestamp: now, completed: true });
+        if (status === 'preparing') {
+          newEvents.push({ id: `t-${Date.now() + 1}`, title: 'Preparing', timestamp: now, completed: true });
+        }
         break;
       case 'ready':
         updates.readyAt = now;

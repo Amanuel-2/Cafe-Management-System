@@ -33,6 +33,22 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null });
       },
     }),
-    { name: 'auth-store' }
+    { 
+      name: 'auth-store', 
+      storage: {
+        getItem: (name) => {
+          const item = localStorage.getItem(name);
+          return item ? JSON.parse(item) : null;
+        },
+        setItem: (name, value) => {
+          localStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name) => {
+          localStorage.removeItem(name);
+        },
+        // Disable cross-tab synchronization by making subscribe a no-op
+        subscribe: () => () => {},
+      }
+    }
   )
 );

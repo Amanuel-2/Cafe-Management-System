@@ -2,7 +2,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Table, TableBody, TableHeader, Td, Th } from '../../components/ui/Table';
-import { useOrderStore, useOrderSocketSync } from '../../store/orderStore';
+import { useOrderStore } from '../../store/orderStore';
 import { cn } from '../../utils/cn';
 import type { OrderStatus } from '../../types/domain';
 
@@ -27,7 +27,6 @@ const getStatusVariant = (status: OrderStatus) => {
 };
 
 export function WaiterOrdersPage() {
-  useOrderSocketSync();
   const orders = useOrderStore((state) => state.orders);
   const markOrderServed = useOrderStore((state) => state.markOrderServed);
 
