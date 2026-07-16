@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 export type DateRangeType = 'today' | 'yesterday' | 'this-week' | 'last-week' | 'this-month' | 'last-month' | 'this-year' | 'custom-single' | 'custom-range';
+export type TimePeriodType = 'full-day' | 'morning' | 'lunch' | 'afternoon' | 'evening';
 
 interface DateRange {
   start: Date;
@@ -10,9 +11,13 @@ interface DateRange {
 
 interface AnalyticsStore {
   dateRange: DateRange;
+  selectedHour: number | null; // 0-23, null means full day/period
+  selectedPeriod: TimePeriodType;
   setDateRange: (range: DateRange) => void;
   setCustomSingleDate: (date: Date) => void;
   setCustomRange: (start: Date, end: Date) => void;
+  setSelectedHour: (hour: number | null) => void;
+  setSelectedPeriod: (period: TimePeriodType) => void;
 }
 
 const getTodayRange = (): DateRange => {
@@ -86,21 +91,25 @@ const getThisYearRange = (): DateRange => {
 
 export const useAnalyticsStore = create<AnalyticsStore>((set) => ({
   dateRange: getTodayRange(),
-  setDateRange: (range) => set({ dateRange: range }),
+  selectedHour: null,
+  selectedPeriod: 'full-day',
+  setDateRange: (range) => set({ dateRange: range, selectedHour: null, selectedPeriod: 'full-day' }),
   setCustomSingleDate: (date) => {
     const start = new Date(date);
     start.setHours(0, 0, 0, 0);
     const end = new Date(date);
     end.setHours(23, 59, 59, 999);
-    set({ dateRange: { start, end, type: 'custom-single' } });
+    set({ dateRange: { start, end, type: 'custom-single' }, selectedHour: null, selectedPeriod: 'full-day' });
   },
   setCustomRange: (start, end) => {
     const s = new Date(start);
     s.setHours(0, 0, 0, 0);
     const e = new Date(end);
     e.setHours(23, 59, 59, 999);
-    set({ dateRange: { start: s, end: e, type: 'custom-range' } });
+    set({ dateRange: { start: s, end: e, type: 'custom-range' }, selectedHour: null, selectedPeriod: 'full-day' });
   },
+  setSelectedHour: (hour) => set({ selectedHour: hour, selectedPeriod: 'full-day' }),
+  setSelectedPeriod: (period) => set({ selectedPeriod: period, selectedHour: null }),
 }));
 
 export {

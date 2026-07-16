@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
+import { HourlyAnalytics } from '../../components/ui/HourlyAnalytics';
 import { RevenueChart } from '../../components/charts/RevenueChart';
 import { OrdersChart } from '../../components/charts/OrdersChart';
 import { TopItemsChart } from '../../components/charts/TopItemsChart';
@@ -30,6 +31,7 @@ import {
   getTopSellingItems,
   getOrdersByHour,
   getWaiterStats,
+  getOrdersInHourOrPeriod,
 } from '../../utils/analytics';
 import { formatETB } from '../../utils/currency';
 
@@ -78,12 +80,17 @@ const StatCard = ({
 
 export function OrderManagementPage() {
   const orders = useOrderStore((state) => state.orders);
-  const { dateRange } = useAnalyticsStore();
+  const { dateRange, selectedHour, selectedPeriod } = useAnalyticsStore();
   const [showAllOrders, setShowAllOrders] = useState(false);
 
-  const filteredOrders = useMemo(
+  const ordersInDateRange = useMemo(
     () => getOrdersInRange(orders, dateRange.start, dateRange.end),
     [orders, dateRange]
+  );
+
+  const filteredOrders = useMemo(
+    () => getOrdersInHourOrPeriod(ordersInDateRange, selectedHour, selectedPeriod),
+    [ordersInDateRange, selectedHour, selectedPeriod]
   );
 
   const stats = useMemo(() => {
@@ -95,17 +102,18 @@ export function OrderManagementPage() {
       cancelledOrders: filteredOrders.filter((o) => o.status === 'cancelled').length,
       pendingOrders: filteredOrders.filter((o) => o.status === 'pending').length,
       preparingOrders: filteredOrders.filter((o) => o.status === 'preparing').length,
+      completedOrders: filteredOrders.filter((o) => o.status === 'ready' || o.status === 'served').length,
     };
   }, [filteredOrders]);
 
   const topItems = useMemo(() => getTopSellingItems(filteredOrders).slice(0, 10), [filteredOrders]);
-  const ordersByHour = useMemo(() => getOrdersByHour(filteredOrders), [filteredOrders]);
+  const ordersByHour = useMemo(() => getOrdersByHour(ordersInDateRange), [ordersInDateRange]);
   const waiterStats = useMemo(() => getWaiterStats(filteredOrders), [filteredOrders]);
 
   const chartData = useMemo(() => {
     // Generate chart data based on date range type
     if (dateRange.type === 'today' || dateRange.type === 'yesterday') {
-      return ordersByHour.map((item) => ({ name: item.hour, revenue: 0, orders: item.count }));
+      return ordersByHour.map((item) => ({ name: `${item.hour.toString().padStart(2, '0')}:00`, revenue: item.revenue, orders: item.count }));
     }
     // For week/month/year, just use simple data for now
     return [
@@ -133,6 +141,8 @@ export function OrderManagementPage() {
           <DateRangePicker />
         </div>
       </div>
+      {/* Hourly Analytics */}
+      <HourlyAnalytics />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
