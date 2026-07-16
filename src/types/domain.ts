@@ -1,4 +1,8 @@
-export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'served' | 'cancelled';
+export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'served' | 'cancelled';
+
+export type PaymentStatus = 'paid' | 'unpaid';
+
+export type PaymentMethod = 'cash' | 'telebirr' | 'cbe_birr' | 'dashen' | 'bank_transfer' | 'other';
 
 export type ItemStatus = 'pending' | 'preparing' | 'ready';
 
@@ -22,19 +26,40 @@ export type OrderItem = {
   id: string;
   menuItemId: string;
   name: string;
+  image: string;
+  price: number;
   quantity: number;
   notes?: string;
   status: ItemStatus;
 };
 
+export type TimelineEvent = {
+  id: string;
+  title: string;
+  timestamp: string;
+  completed: boolean;
+};
+
 export type Order = {
   id: string;
+  receiptNumber: string;
   table: string;
   waiterName: string;
   status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod;
   createdAt: string;
+  acceptedAt?: string;
+  readyAt?: string;
+  servedAt?: string;
+  paidAt?: string;
+  collectedBy?: string;
   items: OrderItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
   total: number;
+  timeline: TimelineEvent[];
 };
 
 export type InventoryItem = {

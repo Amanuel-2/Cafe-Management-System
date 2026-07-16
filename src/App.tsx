@@ -12,6 +12,7 @@ import { NotFound } from './pages/NotFound';
 import { WaiterDashboard } from './pages/waiter/Dashboard';
 import { WaiterOrdersPage } from './features/orders/WaiterOrdersPage';
 import { WaiterCheckoutPage } from './features/orders/WaiterCheckoutPage';
+import { OrderManagementPage } from './features/orders/OrderManagementPage';
 import { InventoryPage } from './features/inventory/InventoryPage';
 import { EmployeesPage } from './features/employees/EmployeesPage';
 import { RecipesPage } from './features/recipes/RecipesPage';
@@ -39,7 +40,7 @@ export default function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="menu" element={<MenuManagementPage />} />
-          <Route path="orders" element={<PlaceholderPage title="Order Management" description="Review dine-in, pickup, and completed order activity." />} />
+          <Route path="orders" element={<OrderManagementPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="employees" element={<EmployeesPage />} />
           <Route path="reports" element={<ReportsPage />} />
