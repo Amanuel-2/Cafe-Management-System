@@ -28,7 +28,8 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Drawer } from '../../components/ui/Drawer';
 import { Select } from '../../components/ui/Select';
-import { orders } from '../../mock/data';
+import { useOrderStore } from '../../store/orderStore';
+import { useAuthStore } from '../../store/authStore';
 import type { Order, OrderStatus, PaymentStatus, PaymentMethod } from '../../types/domain';
 import { cn } from '../../utils/cn';
 
@@ -89,6 +90,10 @@ export function OrderManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const orders = useOrderStore((state) => state.orders);
+  const { markOrderPaid, cancelOrder } = useOrderStore();
+  const user = useAuthStore((state) => state.user);
+
   const waiters = useMemo(() => {
     const uniqueWaiters = new Set(orders.map(o => o.waiterName));
     return Array.from(uniqueWaiters);
@@ -108,7 +113,7 @@ export function OrderManagementPage() {
       paidOrders: orders.filter(o => o.paymentStatus === 'paid').length,
       cancelledOrders: orders.filter(o => o.status === 'cancelled').length,
     };
-  }, []);
+  }, [orders]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
@@ -125,7 +130,7 @@ export function OrderManagementPage() {
 
       return matchesSearch && matchesStatus && matchesPaymentStatus && matchesPaymentMethod && matchesWaiter;
     });
-  }, [searchQuery, statusFilter, paymentStatusFilter, paymentMethodFilter, waiterFilter]);
+  }, [orders, searchQuery, statusFilter, paymentStatusFilter, paymentMethodFilter, waiterFilter]);
 
   const paginatedOrders = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -229,7 +234,6 @@ export function OrderManagementPage() {
                 <th className="p-4 text-sm font-semibold text-stone-500 dark:text-stone-400">Total</th>
                 <th className="p-4 text-sm font-semibold text-stone-500 dark:text-stone-400">Status</th>
                 <th className="p-4 text-sm font-semibold text-stone-500 dark:text-stone-400">Payment</th>
-                <th className="p-4 text-sm font-semibold text-stone-500 dark:text-stone-400">Last Updated</th>
                 <th className="p-4 text-sm font-semibold text-stone-500 dark:text-stone-400">Actions</th>
               </tr>
             </thead>
@@ -265,9 +269,6 @@ export function OrderManagementPage() {
                     <Badge variant={getStatusVariant(order.paymentStatus)}>
                       {getStatusLabel(order.paymentStatus)}
                     </Badge>
-                  </td>
-                  <td className="p-4 text-stone-500 dark:text-stone-400">
-                    {formatTime(order.createdAt)}
                   </td>
                   <td className="p-4">
                     <Button
@@ -483,16 +484,17 @@ export function OrderManagementPage() {
               </Card>
 
               <div className="flex flex-col gap-2">
-                <Button className="w-full" variant="primary">
-                  View Order
-                </Button>
                 {selectedOrder.paymentStatus === 'unpaid' && (
-                  <Button className="w-full" variant="primary">
+                  <Button
+                    className="w-full"
+                    variant="primary"
+                    onClick={() => markOrderPaid(selectedOrder.id, selectedOrder.paymentMethod, user?.name)}
+                  >
                     Mark as Paid
                   </Button>
                 )}
                 {selectedOrder.status !== 'cancelled' && (
-                  <Button className="w-full" variant="danger">
+                  <Button className="w-full" variant="danger" onClick={() => cancelOrder(selectedOrder.id)}>
                     Cancel Order
                   </Button>
                 )}

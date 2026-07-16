@@ -75,6 +75,8 @@ export function mapCartItemsToOrderItems(items: CartItem[]): OrderItem[] {
     id: `oi-${item.menuItemId}-${Date.now()}`,
     menuItemId: item.menuItemId,
     name: item.name,
+    image: item.image,
+    price: item.price,
     quantity: item.quantity,
     notes: item.notes,
     status: 'pending',
