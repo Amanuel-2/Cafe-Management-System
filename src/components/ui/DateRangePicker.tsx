@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from './Button';
@@ -11,8 +11,8 @@ const SHORTCUTS = [
   { label: 'This Week', getRange: getThisWeekRange },
   { label: 'Last Week', getRange: getLastWeekRange },
   { label: 'This Month', getRange: getThisMonthRange },
-  { label: 'Last Month', getLastMonthRange },
-  { label: 'This Year', getThisYearRange },
+  { label: 'Last Month', getRange: getLastMonthRange },
+  { label: 'This Year', getRange: getThisYearRange },
 ];
 
 const getDaysInMonth = (date: Date) => {
@@ -57,10 +57,19 @@ const formatDate = (date: Date) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+const isSameDay = (d1: Date, d2: Date) => {
+  return (
+    d1.getDate() === d2.getDate() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getFullYear() === d2.getFullYear()
+  );
+};
+
 export function DateRangePicker() {
   const { dateRange, setDateRange, setCustomSingleDate } = useAnalyticsStore();
   const [isOpen, setIsOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date(dateRange.start));
+  const today = new Date();
 
   const days = getDaysInMonth(calendarMonth);
 
@@ -70,10 +79,12 @@ export function DateRangePicker() {
 
   const isDateSelected = (date: Date) => {
     return (
-      date.toDateString() === dateRange.start.toDateString() ||
-      date.toDateString() === dateRange.end.toDateString()
+      isSameDay(date, dateRange.start) ||
+      isSameDay(date, dateRange.end)
     );
   };
+
+  const isToday = (date: Date) => isSameDay(date, today);
 
   const prevMonth = () => {
     setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1));
@@ -82,6 +93,24 @@ export function DateRangePicker() {
   const nextMonth = () => {
     setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1));
   };
+
+  const handleClose = useCallback(() => setIsOpen(false), []);
+
+  // Handle Escape key to close
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Prevent background scroll
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, handleClose]);
 
   return (
     <div className="relative">
@@ -103,83 +132,113 @@ export function DateRangePicker() {
       <AnimatePresence>
         {isOpen && (
           <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setIsOpen(false)}
-            />
+            {/* Backdrop */}
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute z-50 mt-2 w-[340px] md:w-[680px] bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl shadow-xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+              onClick={handleClose}
+            />
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
             >
-              <div className="flex flex-col md:flex-row">
-                {/* Shortcuts */}
-                <div className="p-4 border-b md:border-b-0 md:border-r border-stone-200 dark:border-stone-800">
-                  <h3 className="text-sm font-semibold text-stone-500 dark:text-stone-400 mb-2">Quick Select</h3>
-                  <div className="flex flex-wrap gap-2 md:flex-col">
-                    {SHORTCUTS.map((shortcut) => (
-                      <Button
-                        key={shortcut.label}
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setDateRange(shortcut.getRange());
-                          setIsOpen(false);
-                        }}
-                        className="w-full justify-start"
-                      >
-                        {shortcut.label}
+              <Card className="pointer-events-auto w-full max-w-3xl overflow-hidden">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between p-4 border-b border-stone-200 dark:border-stone-800">
+                  <h2 className="text-xl font-bold text-stone-900 dark:text-white">Select Date Range</h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleClose}
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="flex flex-col md:flex-row">
+                  {/* Shortcuts */}
+                  <div className="p-4 border-b md:border-b-0 md:border-r border-stone-200 dark:border-stone-800 md:w-64">
+                    <h3 className="text-sm font-semibold text-stone-500 dark:text-stone-400 mb-3">Quick Select</h3>
+                    <div className="space-y-1">
+                      {SHORTCUTS.map((shortcut) => (
+                        <Button
+                          key={shortcut.label}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setDateRange(shortcut.getRange());
+                            setCalendarMonth(shortcut.getRange().start);
+                            handleClose();
+                          }}
+                          className="w-full justify-start"
+                        >
+                          {shortcut.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Calendar */}
+                  <div className="p-4 flex-1">
+                    <div className="flex items-center justify-between mb-6">
+                      <Button variant="ghost" size="icon" onClick={prevMonth}>
+                        <ChevronLeft className="w-5 h-5" />
                       </Button>
-                    ))}
+                      <h3 className="text-lg font-semibold text-stone-900 dark:text-white">
+                        {calendarMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                      </h3>
+                      <Button variant="ghost" size="icon" onClick={nextMonth}>
+                        <ChevronRight className="w-5 h-5" />
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-2 mb-4">
+                      {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
+                        <div
+                          key={d}
+                          className="text-center text-xs font-semibold text-stone-500 dark:text-stone-400 py-2"
+                        >
+                          {d}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-2">
+                      {days.map(({ date, isCurrentMonth }, index) => (
+                        <button
+                          key={index}
+                          className={`
+                            h-10 w-10 rounded-full text-sm font-medium flex items-center justify-center transition-all relative
+                            ${!isCurrentMonth ? 'text-stone-300 dark:text-stone-600' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800'}
+                            ${isDateInRange(date) ? 'bg-stone-100 dark:bg-stone-800' : ''}
+                            ${isDateSelected(date) ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900' : ''}
+                          `}
+                          onClick={() => {
+                            setCustomSingleDate(date);
+                            handleClose();
+                          }}
+                        >
+                          {date.getDate()}
+                          {isToday(date) && (
+                            <div className={`
+                              absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full
+                              ${isDateSelected(date) ? 'bg-white dark:bg-stone-900' : 'bg-amber-500'}
+                            `} />
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-
-                {/* Calendar */}
-                <div className="p-4 flex-1">
-                  <div className="flex items-center justify-between mb-4">
-                    <Button variant="ghost" size="icon" onClick={prevMonth}>
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <h3 className="text-lg font-semibold text-stone-900 dark:text-white">
-                      {calendarMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                    </h3>
-                    <Button variant="ghost" size="icon" onClick={nextMonth}>
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-7 gap-1 mb-2">
-                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
-                      <div
-                        key={d}
-                        className="text-center text-xs font-semibold text-stone-500 dark:text-stone-400 py-1"
-                      >
-                        {d}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid grid-cols-7 gap-1">
-                    {days.map(({ date, isCurrentMonth }, index) => (
-                      <button
-                        key={index}
-                        className={`h-9 w-9 rounded-full text-sm flex items-center justify-center transition-all
-                          ${!isCurrentMonth ? 'text-stone-300 dark:text-stone-600' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800'}
-                          ${isDateInRange(date) ? 'bg-stone-100 dark:bg-stone-800' : ''}
-                          ${isDateSelected(date) ? 'bg-stone-900 text-white dark:bg-white dark:text-stone-900' : ''}
-                        `}
-                        onClick={() => {
-                          setCustomSingleDate(date);
-                          setIsOpen(false);
-                        }}
-                      >
-                        {date.getDate()}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              </Card>
             </motion.div>
           </>
         )}

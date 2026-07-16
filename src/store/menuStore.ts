@@ -26,9 +26,9 @@ export const useMenuStore = create<MenuState>((set, get) => ({
   fetchMenu: async () => {
     set({ isLoading: true });
     try {
-      const response = await fetch('/api/menu');
+      const response = await fetch('/api/data/menu');
       const data = await response.json();
-      set({ menuItems: data.items, isLoading: false });
+      set({ categories: data.categories, menuItems: data.items, isLoading: false });
     } catch (error) {
       console.error('Failed to fetch menu:', error);
       set({ isLoading: false });
@@ -37,12 +37,13 @@ export const useMenuStore = create<MenuState>((set, get) => ({
 
   addMenuItem: async (item) => {
     try {
-      const response = await fetch('/api/menu', {
+      const response = await fetch('/api/data/menu', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item),
       });
       const newItem = await response.json();
+      get().prependMenuItem(newItem);
       socket.emit('menu:create', item);
     } catch (error) {
       console.error('Failed to add menu item:', error);
@@ -51,12 +52,13 @@ export const useMenuStore = create<MenuState>((set, get) => ({
 
   updateMenuItem: async (id, item) => {
     try {
-      const response = await fetch(`/api/menu/${id}`, {
+      const response = await fetch(`/api/data/menu/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item),
       });
       const updatedItem = await response.json();
+      get().upsertMenuItem({ ...updatedItem, id });
       socket.emit('menu:update', { id, ...item });
     } catch (error) {
       console.error('Failed to update menu item:', error);
@@ -65,7 +67,8 @@ export const useMenuStore = create<MenuState>((set, get) => ({
 
   removeMenuItem: async (id) => {
     try {
-      await fetch(`/api/menu/${id}`, { method: 'DELETE' });
+      await fetch(`/api/data/menu/${id}`, { method: 'DELETE' });
+      get().removeMenuItemById(id);
       socket.emit('menu:delete', id);
     } catch (error) {
       console.error('Failed to remove menu item:', error);
@@ -74,11 +77,15 @@ export const useMenuStore = create<MenuState>((set, get) => ({
 
   setAvailability: async (id, available) => {
     try {
-      await fetch(`/api/menu/${id}/availability`, {
+      await fetch(`/api/data/menu/${id}/availability`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ available }),
       });
+      const item = get().menuItems.find(i => i.id === id);
+      if (item) {
+        get().upsertMenuItem({ ...item, available });
+      }
       socket.emit('menu:availability', { id, available });
     } catch (error) {
       console.error('Failed to toggle availability:', error);

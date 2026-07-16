@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import { authRouter } from './routes/authRoutes';
 import { orderRouter } from './routes/orderRoutes';
-import { dataRouter } from './routes/dataRoutes';
+import { createDataRouter } from './routes/dataRoutes';
 import { setupSocket } from './socket';
 
 const PORT = 3003;
@@ -15,16 +15,16 @@ const server = http.createServer(app);
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// Routes
-app.use('/api/auth', authRouter);
-app.use('/api/orders', orderRouter);
-app.use('/api/data', dataRouter);
-
-// Socket.IO setup
+// Socket.IO setup first so we have io instance for dataRouter
 const io = new Server(server, {
   cors: { origin: '*' },
 });
 setupSocket(io);
+
+// Routes
+app.use('/api/auth', authRouter);
+app.use('/api/orders', orderRouter);
+app.use('/api/data', createDataRouter(io));
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server is running on http://0.0.0.0:${PORT}`);

@@ -3,6 +3,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { DatePicker } from '../../components/ui/DatePicker';
+import { SearchInput } from '../../components/ui/SearchInput';
 import { useMenuStore } from '../../store/menuStore';
 import { useOrderStore } from '../../store/orderStore';
 import { useWaiterCartStore } from '../../store/waiterCartStore';
@@ -157,6 +158,8 @@ export function WaiterDashboard() {
   const { addItem } = useWaiterCartStore();
   const cartItems = useWaiterCartStore((state) => state.items);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
@@ -169,20 +172,50 @@ export function WaiterDashboard() {
     });
   }, [orders, selectedDate]);
 
+  const filteredMenuItems = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    return menuItems.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(normalizedQuery);
+      const matchesCategory = selectedCategoryId === 'all' || item.categoryId === selectedCategoryId;
+      return matchesSearch && matchesCategory;
+    });
+  }, [menuItems, selectedCategoryId, searchQuery]);
+
   return (
     <div className="grid gap-5 xl:grid-cols-[1fr_360px] pb-24">
       <section className="space-y-5">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between flex-wrap">
           <h1 className="text-2xl font-semibold">Menu</h1>
-          <div className="w-64">
+          <div className="flex flex-col gap-3 md:w-auto md:flex-row md:items-center">
+            <SearchInput
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search menu items"
+              className="w-64"
+            />
             <DatePicker selected={selectedDate} onChange={setSelectedDate} />
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          {categories.map((category) => <button key={category.id} className={`min-h-14 rounded-lg px-5 text-base font-semibold ${category.color}`}>{category.name}</button>)}
+          <button
+            key="all"
+            onClick={() => setSelectedCategoryId('all')}
+            className={`min-h-14 rounded-lg px-5 text-base font-semibold ${selectedCategoryId === 'all' ? 'ring-2 ring-stone-400 ring-offset-2 dark:ring-stone-500 dark:ring-offset-stone-950 bg-stone-950 text-white dark:bg-white dark:text-stone-950' : 'bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-200'}`}
+          >
+            All
+          </button>
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategoryId(category.id)}
+              className={`min-h-14 rounded-lg px-5 text-base font-semibold transition-all ${category.color} ${selectedCategoryId === category.id ? 'ring-2 ring-stone-400 ring-offset-2 dark:ring-stone-500 dark:ring-offset-stone-950' : ''}`}
+            >
+              {category.name}
+            </button>
+          ))}
         </div>
         <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-          {menuItems.map((item) => (
+          {filteredMenuItems.map((item) => (
             <Card key={item.id} className="overflow-hidden">
               <img src={item.image} alt={item.name} className="h-40 w-full object-cover" />
               <div className="p-4">
