@@ -1,5 +1,5 @@
 const DATABASE_KEY = 'restaurant-management-db';
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 const CHANGE_EVENT = 'restaurant:database-change';
 
 const now = () => new Date().toISOString();
@@ -28,7 +28,12 @@ const initialDatabase = () => ({
     { id: 'role-chef', name: 'Chef', slug: 'chef', system: true },
     { id: 'role-consumer', name: 'Consumer', slug: 'consumer', system: true },
   ],
-  employees: [],
+  employees: [
+    { id: 'employee-admin', userId: 'user-admin', name: 'Restaurant Admin', role: 'Admin', email: 'admin@restaurant.com', phone: '+251 911 000 101', status: 'active' },
+    { id: 'employee-cashier', userId: 'user-cashier', name: 'Restaurant Cashier', role: 'Cashier', email: 'cashier@restaurant.com', phone: '+251 911 000 102', status: 'active' },
+    { id: 'employee-chef', userId: 'user-chef', name: 'Restaurant Chef', role: 'Chef', email: 'chef@restaurant.com', phone: '+251 911 000 103', status: 'active' },
+    { id: 'employee-waiter', userId: 'user-waiter', name: 'Restaurant Waiter', role: 'Waiter', email: 'waiter@restaurant.com', phone: '+251 911 000 104', status: 'active' },
+  ],
   categories: [
     { id: 'category-coffee', name: 'Coffee', type: 'drink', status: 'active', sortOrder: 1, color: 'bg-amber-100 text-amber-900' },
     { id: 'category-breakfast', name: 'Breakfast', type: 'food', status: 'active', sortOrder: 2, color: 'bg-orange-100 text-orange-900' },
@@ -39,10 +44,20 @@ const initialDatabase = () => ({
     { id: 'menu-breakfast', name: 'House Breakfast', categoryId: 'category-breakfast', type: 'food', price: 280, description: 'Eggs, fresh bread, seasonal vegetables, and house sauce.', available: true, prepTimeMinutes: 12, image: '/favicon.svg' },
     { id: 'menu-chicken', name: 'Grilled Chicken Plate', categoryId: 'category-main', type: 'food', price: 480, description: 'Grilled chicken served with vegetables and seasoned rice.', available: true, prepTimeMinutes: 20, image: '/favicon.svg' },
   ],
-  recipes: [],
-  inventoryItems: [],
+  recipes: [
+    { id: 'recipe-cappuccino', name: 'House Cappuccino', menuItemId: 'menu-cappuccino', ingredients: ['Espresso beans', 'Whole milk'] },
+    { id: 'recipe-breakfast', name: 'House Breakfast', menuItemId: 'menu-breakfast', ingredients: ['Eggs', 'Fresh bread', 'Vegetables'] },
+  ],
+  inventoryItems: [
+    { id: 'inventory-coffee', name: 'Espresso beans', category: 'Coffee', unit: 'kg', stock: 18, parLevel: 12, minimumStock: 12, supplierId: 'supplier-roast', expirationDate: '2026-10-30' },
+    { id: 'inventory-bread', name: 'Fresh bread', category: 'Bakery', unit: 'loaves', stock: 8, parLevel: 10, minimumStock: 10, supplierId: 'supplier-fresh', expirationDate: '2026-07-25' },
+    { id: 'inventory-eggs', name: 'Eggs', category: 'Dairy', unit: 'trays', stock: 14, parLevel: 8, minimumStock: 8, supplierId: 'supplier-fresh', expirationDate: '2026-08-05' },
+  ],
   stockMovements: [],
-  suppliers: [],
+  suppliers: [
+    { id: 'supplier-fresh', name: 'Fresh Fields Supply', contact: 'Nora Bekele', phone: '+251 911 200 100', email: 'orders@freshfields.example', status: 'active' },
+    { id: 'supplier-roast', name: 'Addis Roast Works', contact: 'Omar Ali', phone: '+251 911 200 200', email: 'sales@addisroast.example', status: 'active' },
+  ],
   purchaseOrders: [],
   tables: [],
   orders: [],
@@ -50,7 +65,9 @@ const initialDatabase = () => ({
   receipts: [],
   customers: [],
   expenses: [],
-  notifications: [],
+  notifications: [
+    { id: 'notification-low-bread', title: 'Low stock', description: 'Fresh bread is below its minimum stock level.', read: false, type: 'inventory', createdAt: now() },
+  ],
   auditLogs: [],
   settings: {
     restaurantName: 'Restaurant Manager',
@@ -62,12 +79,41 @@ const initialDatabase = () => ({
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
+function mergeSeedRecords(records, seedRecords, uniqueField = 'id') {
+  const current = Array.isArray(records) ? records : [];
+  const existingValues = new Set(current.map((record) => record[uniqueField]));
+  return [...current, ...seedRecords.filter((record) => !existingValues.has(record[uniqueField]))];
+}
+
+function migrateDatabase(database) {
+  const seed = initialDatabase();
+  if ((database.meta?.version ?? 0) >= DATABASE_VERSION) return database;
+
+  const migrated = {
+    ...seed,
+    ...database,
+    meta: { ...seed.meta, ...database.meta, version: DATABASE_VERSION, updatedAt: now() },
+    users: mergeSeedRecords(database.users, seed.users, 'email'),
+    roles: mergeSeedRecords(database.roles, seed.roles, 'slug'),
+    employees: mergeSeedRecords(database.employees, seed.employees, 'email'),
+    categories: mergeSeedRecords(database.categories, seed.categories),
+    menuItems: mergeSeedRecords(database.menuItems, seed.menuItems),
+    recipes: mergeSeedRecords(database.recipes, seed.recipes),
+    inventoryItems: mergeSeedRecords(database.inventoryItems, seed.inventoryItems),
+    suppliers: mergeSeedRecords(database.suppliers, seed.suppliers),
+    notifications: mergeSeedRecords(database.notifications, seed.notifications),
+    settings: { ...seed.settings, ...database.settings },
+  };
+  localStorage.setItem(DATABASE_KEY, JSON.stringify(migrated));
+  return migrated;
+}
+
 function readDatabase() {
   const raw = localStorage.getItem(DATABASE_KEY);
   if (!raw) {
     const database = initialDatabase();
     localStorage.setItem(DATABASE_KEY, JSON.stringify(database));
-    return database;
+    return migrateDatabase(database);
   }
 
   try {

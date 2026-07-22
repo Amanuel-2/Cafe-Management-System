@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { inventory } from '../mock/data';
+import { inventoryService } from '../services/inventoryService';
 import type { InventoryItem } from '../types/domain';
 
 type InventoryState = {
@@ -8,9 +8,12 @@ type InventoryState = {
 };
 
 export const useInventoryStore = create<InventoryState>((set) => ({
-  items: inventory,
-  updateStock: (id, stock) =>
+  items: inventoryService.list(),
+  updateStock: (id, stock) => {
+    const updated = inventoryService.updateStock(id, stock);
+    if (!updated) return;
     set((state) => ({
-      items: state.items.map((item) => (item.id === id ? { ...item, stock } : item)),
-    })),
+      items: state.items.map((item) => (item.id === id ? updated : item)),
+    }));
+  },
 }));

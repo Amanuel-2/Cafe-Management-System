@@ -2,9 +2,10 @@ import { Truck, Phone, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { StatCard } from '../../components/ui/StatCard';
 import { Table, TableBody, TableHeader, Td, Th } from '../../components/ui/Table';
-import { suppliers } from '../../mock/data';
+import { supplierService } from '../../services/supplierService';
 
 export function SuppliersPage() {
+  const suppliers = supplierService.list();
   const totalSuppliers = suppliers.length;
 
   return (

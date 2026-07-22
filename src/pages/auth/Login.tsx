@@ -7,8 +7,8 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Spinner } from '../../components/ui/Spinner';
-import { useAuthStore } from '../../store/authStore';
-import { roleHomePath } from '../../routes/paths';
+import { useAuth } from '../../hooks/useAuth';
+import { roleHomePath } from '../../routes/access';
 
 const loginSchema = z.object({
   email: z.email('Enter a valid email'),
@@ -19,7 +19,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { user, login } = useAuthStore();
+  const { user, login } = useAuth();
   const [formError, setFormError] = useState('');
   const {
     register,

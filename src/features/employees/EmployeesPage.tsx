@@ -4,9 +4,10 @@ import { StatCard } from '../../components/ui/StatCard';
 import { Table, TableBody, TableHeader, Td, Th } from '../../components/ui/Table';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
-import { employees } from '../../mock/data';
+import { employeeService } from '../../services/employeeService';
 
 export function EmployeesPage() {
+  const employees = employeeService.list();
   const activeCount = employees.filter((e) => e.status === 'active').length;
   const totalEmployees = employees.length;
 

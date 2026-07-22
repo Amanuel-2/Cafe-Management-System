@@ -1,20 +1,13 @@
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { CssBaseline, ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material';
 import type { ReactNode } from 'react';
-import { useEffect, useMemo } from 'react';
-import { useThemeStore } from '../store/themeStore';
+import { useMemo } from 'react';
+import { AuthProvider } from '../contexts/AuthContext';
+import { NotificationProvider } from '../contexts/NotificationContext';
+import { AppThemeProvider } from '../contexts/ThemeContext';
+import { useAppTheme } from '../hooks/useAppTheme';
 
-function ThemeEffect() {
-  const mode = useThemeStore((state) => state.mode);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', mode === 'dark');
-  }, [mode]);
-
-  return null;
-}
-
-export function AppProviders({ children }: { children: ReactNode }) {
-  const mode = useThemeStore((state) => state.mode);
+function MuiThemeBridge({ children }: { children: ReactNode }) {
+  const { mode } = useAppTheme();
   const theme = useMemo(() => createTheme({
     palette: {
       mode,
@@ -39,11 +32,22 @@ export function AppProviders({ children }: { children: ReactNode }) {
   }), [mode]);
 
   return (
-    <ThemeProvider theme={theme}>
+    <MuiThemeProvider theme={theme}>
       <CssBaseline />
-      <ThemeEffect />
       {children}
-    </ThemeProvider>
+    </MuiThemeProvider>
+  );
+}
+
+export function AppProviders({ children }: { children: ReactNode }) {
+  return (
+    <AppThemeProvider>
+      <MuiThemeBridge>
+        <AuthProvider>
+          <NotificationProvider>{children}</NotificationProvider>
+        </AuthProvider>
+      </MuiThemeBridge>
+    </AppThemeProvider>
   );
 }
 

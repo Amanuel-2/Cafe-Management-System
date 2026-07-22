@@ -1,12 +1,11 @@
 import { Bell } from 'lucide-react';
-import { useNotificationStore } from '../../store/notificationStore';
+import { useNotifications } from '../../hooks/useNotifications';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Dropdown } from '../ui/Dropdown';
 
 export function NotificationPanel() {
-  const { notifications, markAllRead } = useNotificationStore();
-  const unreadCount = notifications.filter((notification) => !notification.read).length;
+  const { notifications, unreadCount, markAllRead } = useNotifications();
 
   return (
     <Dropdown
@@ -22,7 +21,9 @@ export function NotificationPanel() {
           <Button variant="ghost" size="sm" onClick={markAllRead}>Mark read</Button>
         </div>
         <div className="space-y-1">
-          {notifications.map((notification) => (
+          {notifications.length === 0 ? (
+            <p className="px-2 py-5 text-center text-sm text-stone-500 dark:text-stone-400">No notifications yet.</p>
+          ) : notifications.map((notification) => (
             <div key={notification.id} className="rounded-md p-2 hover:bg-stone-100 dark:hover:bg-stone-900">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-medium text-stone-900 dark:text-stone-100">{notification.title}</p>

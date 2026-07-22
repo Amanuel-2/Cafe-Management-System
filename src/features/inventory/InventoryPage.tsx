@@ -3,11 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { StatCard } from '../../components/ui/StatCard';
 import { Table, TableBody, TableHeader, Td, Th } from '../../components/ui/Table';
 import { Badge } from '../../components/ui/Badge';
-import { inventory, suppliers } from '../../mock/data';
+import { inventoryService } from '../../services/inventoryService';
+import { supplierService } from '../../services/supplierService';
 import { useMemo } from 'react';
 
 export function InventoryPage() {
-  const supplierMap = useMemo(() => new Map(suppliers.map((s) => [s.id, s])), []);
+  const inventory = inventoryService.list();
+  const suppliers = supplierService.list();
+  const supplierMap = useMemo(() => new Map(suppliers.map((s) => [s.id, s])), [suppliers]);
   const lowStockCount = inventory.filter((item) => item.stock < item.parLevel).length;
   const totalItems = inventory.length;
 

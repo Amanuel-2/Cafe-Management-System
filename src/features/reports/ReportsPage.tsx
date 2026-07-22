@@ -1,9 +1,10 @@
 import { BarChart3, TrendingUp, TrendingDown, DollarSign, ClipboardList } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { StatCard } from '../../components/ui/StatCard';
-import { reports } from '../../mock/data';
+import { reportService } from '../../services/reportService';
 
 export function ReportsPage() {
+  const reports = reportService.getSummaryCards();
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">

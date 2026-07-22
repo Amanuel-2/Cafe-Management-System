@@ -1,10 +1,10 @@
 import { Moon, Sun } from 'lucide-react';
-import { useThemeStore } from '../../store/themeStore';
+import { useAppTheme } from '../../hooks/useAppTheme';
 import { Button } from '../ui/Button';
 import { Tooltip } from '../ui/Tooltip';
 
 export function ThemeSwitch() {
-  const { mode, toggle } = useThemeStore();
+  const { mode, toggle } = useAppTheme();
   const isDark = mode === 'dark';
 
   return (

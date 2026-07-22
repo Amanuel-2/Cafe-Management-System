@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
 import { useOrderStore } from '../../store/orderStore';
 import { useAnalyticsStore } from '../../store/analyticsStore';
-import { useAuthStore } from '../../store/authStore';
+import { useAuth } from '../../hooks/useAuth';
 import { getOrdersInRange, getTotalRevenue, getTotalOrders } from '../../utils/analytics';
 import { formatETB } from '../../utils/currency';
 import type { OrderStatus } from '../../types/domain';
@@ -59,7 +59,7 @@ export function WaiterOrdersPage() {
   const orders = useOrderStore((state) => state.orders);
   const { markOrderServed } = useOrderStore();
   const { dateRange } = useAnalyticsStore();
-  const user = useAuthStore((state) => state.user);
+  const { user } = useAuth();
 
   const filteredOrders = useMemo(
     () => getOrdersInRange(orders, dateRange.start, dateRange.end),

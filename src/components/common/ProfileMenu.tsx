@@ -1,11 +1,11 @@
 import { LogOut, UserCircle } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
+import { useAuth } from '../../hooks/useAuth';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { Dropdown } from '../ui/Dropdown';
 
 export function ProfileMenu() {
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuth();
 
   if (!user) return null;
 

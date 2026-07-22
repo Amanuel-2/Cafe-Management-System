@@ -2,11 +2,14 @@ import { ChefHat, List, UtensilsCrossed } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { StatCard } from '../../components/ui/StatCard';
 import { Badge } from '../../components/ui/Badge';
-import { recipes, menuItems } from '../../mock/data';
+import { menuService } from '../../services/menuService';
+import { recipeService } from '../../services/recipeService';
 import { useMemo } from 'react';
 
 export function RecipesPage() {
-  const menuItemMap = useMemo(() => new Map(menuItems.map((m) => [m.id, m])), []);
+  const recipes = recipeService.list();
+  const menuItems = menuService.list();
+  const menuItemMap = useMemo(() => new Map(menuItems.map((m) => [m.id, m])), [menuItems]);
   const totalRecipes = recipes.length;
 
   return (
@@ -20,8 +23,8 @@ export function RecipesPage() {
 
       <section className="grid gap-4 md:grid-cols-3">
         <StatCard label="Recipes" value={String(totalRecipes)} change="Menu items documented" Icon={ChefHat} />
-        <StatCard label="Ingredients" value="12" change="Total tracked" Icon={List} />
-        <StatCard label="Prep steps" value="28" change="Standardized process" Icon={UtensilsCrossed} />
+        <StatCard label="Ingredients" value={String(new Set(recipes.flatMap((recipe) => recipe.ingredients)).size)} change="Unique ingredients" Icon={List} />
+        <StatCard label="Prep steps" value={String(recipes.reduce((total, recipe) => total + recipe.ingredients.length, 0))} change="Recipe components" Icon={UtensilsCrossed} />
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

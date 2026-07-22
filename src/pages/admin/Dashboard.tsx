@@ -3,13 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { StatCard } from '../../components/ui/StatCard';
 import { Table, TableBody, TableHeader, Td, Th } from '../../components/ui/Table';
 import { DatePicker } from '../../components/ui/DatePicker';
-import { inventory, reports } from '../../mock/data';
+import { employeeService } from '../../services/employeeService';
+import { inventoryService } from '../../services/inventoryService';
+import { reportService } from '../../services/reportService';
 import { useOrderStore } from '../../store/orderStore';
 import { formatETB } from '../../utils/currency';
 import { useState, useMemo } from 'react';
 
 export function AdminDashboard() {
   const orders = useOrderStore((state) => state.orders);
+  const inventory = inventoryService.list();
+  const employees = employeeService.list();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const filteredOrders = useMemo(() => {
@@ -22,6 +26,7 @@ export function AdminDashboard() {
       );
     });
   }, [orders, selectedDate]);
+  const dailySnapshot = reportService.getDailySnapshot(selectedDate);
 
   return (
     <div className="space-y-6">
@@ -32,9 +37,9 @@ export function AdminDashboard() {
         </div>
       </div>
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label={reports[0].label} value={reports[0].value} change={reports[0].change} Icon={DollarSign} />
-        <StatCard label="Open orders" value={String(filteredOrders.length)} change="+4 today" Icon={ClipboardList} />
-        <StatCard label="Active staff" value="14" change="3 roles" Icon={Users} />
+        <StatCard label="Sales" value={formatETB(dailySnapshot.revenue)} change={`${dailySnapshot.paidOrderCount} paid orders`} Icon={DollarSign} />
+        <StatCard label="Open orders" value={String(dailySnapshot.openOrders)} change={`${filteredOrders.length} orders selected`} Icon={ClipboardList} />
+        <StatCard label="Active staff" value={String(employees.filter((employee) => employee.status === 'active').length)} change={`${employees.length} team members`} Icon={Users} />
         <StatCard label="Low stock" value={String(inventory.filter((item) => item.stock < item.parLevel).length)} change="Needs review" Icon={Boxes} />
       </section>
       <section className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">

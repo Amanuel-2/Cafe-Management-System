@@ -7,7 +7,7 @@ import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Textarea } from '../../components/ui/Textarea';
 import { Toast } from '../../components/ui/Toast';
-import { useAuthStore } from '../../store/authStore';
+import { useAuth } from '../../hooks/useAuth';
 import { useOrderStore } from '../../store/orderStore';
 import { mapCartItemsToOrderItems, useWaiterCartStore } from '../../store/waiterCartStore';
 import { useState } from 'react';
@@ -19,7 +19,7 @@ const tableOptions = Array.from({ length: 12 }, (_, index) => {
 });
 
 export function WaiterCheckoutPage() {
-  const user = useAuthStore((state) => state.user);
+  const { user } = useAuth();
   const addOrder = useOrderStore((state) => state.addOrder);
   const { table, items, setTable, incrementItem, decrementItem, removeItem, updateNotes, clearCart } = useWaiterCartStore();
   const [toast, setToast] = useState('');

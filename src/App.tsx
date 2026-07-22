@@ -1,36 +1,52 @@
+import { Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { AdminLayout } from './layouts/AdminLayout';
-import { AuthLayout } from './layouts/AuthLayout';
-import { ChefLayout } from './layouts/ChefLayout';
-import { WaiterLayout } from './layouts/WaiterLayout';
-import { CashierLayout } from './layouts/CashierLayout';
-import { ConsumerLayout } from './layouts/ConsumerLayout';
-import { AdminDashboard } from './pages/admin/Dashboard';
-import { PlaceholderPage } from './pages/PlaceholderPage';
-import { ChefDashboard } from './pages/chef/Dashboard';
-import { CashierDashboard } from './pages/cashier/Dashboard';
-import { ConsumerHome } from './pages/consumer/Home';
-import { ConsumerMenu } from './pages/consumer/Menu';
-import { MenuManagementPage } from './features/menu/MenuManagementPage';
-import { LoginPage } from './pages/auth/Login';
-import { NotFound } from './pages/NotFound';
-import { WaiterDashboard } from './pages/waiter/Dashboard';
-import { WaiterOrdersPage } from './features/orders/WaiterOrdersPage';
-import { WaiterCheckoutPage } from './features/orders/WaiterCheckoutPage';
-import { OrderManagementPage } from './features/orders/OrderManagementPage';
-import { InventoryPage } from './features/inventory/InventoryPage';
-import { EmployeesPage } from './features/employees/EmployeesPage';
-import { RecipesPage } from './features/recipes/RecipesPage';
-import { ReportsPage } from './features/reports/ReportsPage';
-import { SuppliersPage } from './features/suppliers/SuppliersPage';
+import { Spinner } from './components/ui/Spinner';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { RoleRedirect } from './routes/RoleRedirect';
-import { UserRole } from './types/auth';
+import { STAFF_ROUTE_ROLES } from './routes/access';
+import { lazyNamed } from './utils/lazyNamed';
+
+const AdminLayout = lazyNamed(() => import('./layouts/AdminLayout'), 'AdminLayout');
+const AuthLayout = lazyNamed(() => import('./layouts/AuthLayout'), 'AuthLayout');
+const ChefLayout = lazyNamed(() => import('./layouts/ChefLayout'), 'ChefLayout');
+const WaiterLayout = lazyNamed(() => import('./layouts/WaiterLayout'), 'WaiterLayout');
+const CashierLayout = lazyNamed(() => import('./layouts/CashierLayout'), 'CashierLayout');
+const ConsumerLayout = lazyNamed(() => import('./layouts/ConsumerLayout'), 'ConsumerLayout');
+const AdminDashboard = lazyNamed(() => import('./pages/admin/Dashboard'), 'AdminDashboard');
+const PlaceholderPage = lazyNamed(() => import('./pages/PlaceholderPage'), 'PlaceholderPage');
+const ChefDashboard = lazyNamed(() => import('./pages/chef/Dashboard'), 'ChefDashboard');
+const CashierDashboard = lazyNamed(() => import('./pages/cashier/Dashboard'), 'CashierDashboard');
+const ConsumerHome = lazyNamed(() => import('./pages/consumer/Home'), 'ConsumerHome');
+const ConsumerMenu = lazyNamed(() => import('./pages/consumer/Menu'), 'ConsumerMenu');
+const MenuManagementPage = lazyNamed(() => import('./features/menu/MenuManagementPage'), 'MenuManagementPage');
+const LoginPage = lazyNamed(() => import('./pages/auth/Login'), 'LoginPage');
+const NotFound = lazyNamed(() => import('./pages/NotFound'), 'NotFound');
+const WaiterDashboard = lazyNamed(() => import('./pages/waiter/Dashboard'), 'WaiterDashboard');
+const WaiterOrdersPage = lazyNamed(() => import('./features/orders/WaiterOrdersPage'), 'WaiterOrdersPage');
+const WaiterCheckoutPage = lazyNamed(() => import('./features/orders/WaiterCheckoutPage'), 'WaiterCheckoutPage');
+const OrderManagementPage = lazyNamed(() => import('./features/orders/OrderManagementPage'), 'OrderManagementPage');
+const InventoryPage = lazyNamed(() => import('./features/inventory/InventoryPage'), 'InventoryPage');
+const EmployeesPage = lazyNamed(() => import('./features/employees/EmployeesPage'), 'EmployeesPage');
+const RecipesPage = lazyNamed(() => import('./features/recipes/RecipesPage'), 'RecipesPage');
+const ReportsPage = lazyNamed(() => import('./features/reports/ReportsPage'), 'ReportsPage');
+const SuppliersPage = lazyNamed(() => import('./features/suppliers/SuppliersPage'), 'SuppliersPage');
+
+function RouteFallback() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-stone-100 dark:bg-stone-950">
+      <div className="space-y-3 text-center">
+        <Spinner className="mx-auto h-10 w-10 text-stone-500" />
+        <p className="text-sm text-stone-500 dark:text-stone-400">Loading workspace…</p>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
         </Route>
@@ -44,7 +60,7 @@ export default function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={[UserRole.Admin]}>
+            <ProtectedRoute allowedRoles={STAFF_ROUTE_ROLES.admin}>
               <AdminLayout />
             </ProtectedRoute>
           }
@@ -63,7 +79,7 @@ export default function App() {
         <Route
           path="/cashier"
           element={
-            <ProtectedRoute allowedRoles={[UserRole.Cashier]}>
+            <ProtectedRoute allowedRoles={STAFF_ROUTE_ROLES.cashier}>
               <CashierLayout />
             </ProtectedRoute>
           }
@@ -78,7 +94,7 @@ export default function App() {
         <Route
           path="/waiter"
           element={
-            <ProtectedRoute allowedRoles={[UserRole.Waiter]}>
+            <ProtectedRoute allowedRoles={STAFF_ROUTE_ROLES.waiter}>
               <WaiterLayout />
             </ProtectedRoute>
           }
@@ -92,7 +108,7 @@ export default function App() {
         <Route
           path="/chef"
           element={
-            <ProtectedRoute allowedRoles={[UserRole.Chef]}>
+            <ProtectedRoute allowedRoles={STAFF_ROUTE_ROLES.chef}>
               <ChefLayout />
             </ProtectedRoute>
           }
@@ -105,7 +121,8 @@ export default function App() {
         <Route path="/dashboard" element={<RoleRedirect />} />
         <Route path="*" element={<NotFound />} />
         <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
