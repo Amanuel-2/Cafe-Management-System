@@ -18,12 +18,13 @@ import {
   Typography,
 } from '@mui/material';
 import { Menu, UtensilsCrossed, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link as RouterLink, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { NotificationPanel } from '../components/common/NotificationPanel';
 import { ProfileMenu } from '../components/common/ProfileMenu';
 import { ThemeSwitch } from '../components/common/ThemeSwitch';
 import { useAuth } from '../hooks/useAuth';
+import { roleService } from '../services/roleService';
 
 const DRAWER_WIDTH = 272;
 
@@ -94,12 +95,11 @@ export function StaffLayout({ workspace, roleLabel, navItems }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
+  const allowedNavItems = navItems.filter((item) => roleService.userHasPermission(user, item.permission));
 
-  const activeItem = useMemo(() => {
-    return [...navItems]
-      .sort((a, b) => b.to.length - a.to.length)
-      .find((item) => item.end ? location.pathname === item.to : location.pathname.startsWith(item.to));
-  }, [location.pathname, navItems]);
+  const activeItem = [...allowedNavItems]
+    .sort((a, b) => b.to.length - a.to.length)
+    .find((item) => item.end ? location.pathname === item.to : location.pathname.startsWith(item.to));
 
   const pathSegments = location.pathname.split('/').filter(Boolean);
   const drawerContent = (mobile = false) => (
@@ -107,7 +107,7 @@ export function StaffLayout({ workspace, roleLabel, navItems }) {
       <Brand workspace={workspace} mobile={mobile} onClose={() => setMobileOpen(false)} />
       <Divider />
       <Box sx={{ flex: 1, overflowY: 'auto' }}>
-        <Navigation items={navItems} onNavigate={() => setMobileOpen(false)} />
+        <Navigation items={allowedNavItems} onNavigate={() => setMobileOpen(false)} />
       </Box>
       <Divider />
       <Box sx={{ p: 2 }}>

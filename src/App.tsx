@@ -3,8 +3,9 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Spinner } from './components/ui/Spinner';
 import { RouteErrorBoundary } from './components/common/RouteErrorBoundary';
 import { ProtectedRoute } from './routes/ProtectedRoute';
+import { PermissionRoute } from './routes/PermissionRoute';
 import { RoleRedirect } from './routes/RoleRedirect';
-import { STAFF_ROUTE_ROLES } from './routes/access';
+import { PERMISSION, STAFF_ROUTE_ROLES } from './routes/access';
 import { lazyNamed } from './utils/lazyNamed';
 
 const AdminLayout = lazyNamed(() => import('./layouts/AdminLayout'), 'AdminLayout');
@@ -20,6 +21,7 @@ const CashierDashboard = lazyNamed(() => import('./pages/cashier/Dashboard'), 'C
 const ConsumerHome = lazyNamed(() => import('./pages/consumer/Home'), 'ConsumerHome');
 const ConsumerMenu = lazyNamed(() => import('./pages/consumer/Menu'), 'ConsumerMenu');
 const MenuManagementPage = lazyNamed(() => import('./features/menu/MenuManagementPage'), 'MenuManagementPage');
+const CategoriesPage = lazyNamed(() => import('./features/categories/CategoriesPage'), 'CategoriesPage');
 const LoginPage = lazyNamed(() => import('./pages/auth/Login'), 'LoginPage');
 const NotFound = lazyNamed(() => import('./pages/NotFound'), 'NotFound');
 const WaiterDashboard = lazyNamed(() => import('./pages/waiter/Dashboard'), 'WaiterDashboard');
@@ -31,6 +33,9 @@ const EmployeesPage = lazyNamed(() => import('./features/employees/EmployeesPage
 const RecipesPage = lazyNamed(() => import('./features/recipes/RecipesPage'), 'RecipesPage');
 const ReportsPage = lazyNamed(() => import('./features/reports/ReportsPage'), 'ReportsPage');
 const SuppliersPage = lazyNamed(() => import('./features/suppliers/SuppliersPage'), 'SuppliersPage');
+const RolesPage = lazyNamed(() => import('./features/roles/RolesPage'), 'RolesPage');
+const AuditLogsPage = lazyNamed(() => import('./features/audit/AuditLogsPage'), 'AuditLogsPage');
+const AccessDenied = lazyNamed(() => import('./pages/AccessDenied'), 'AccessDenied');
 
 function RouteFallback() {
   return (
@@ -58,6 +63,7 @@ export default function App() {
           <Route path="/menu" element={<ConsumerMenu />} />
           <Route path="/track-order" element={<PlaceholderPage title="Track order" description="Consumer order tracking will be connected in Phase 10." />} />
         </Route>
+        <Route path="/access-denied" element={<AccessDenied />} />
 
         <Route
           path="/admin"
@@ -68,14 +74,17 @@ export default function App() {
           }
         >
           <Route index element={<AdminDashboard />} />
-          <Route path="menu" element={<MenuManagementPage />} />
-          <Route path="orders" element={<OrderManagementPage />} />
-          <Route path="inventory" element={<InventoryPage />} />
-          <Route path="employees" element={<EmployeesPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="recipes" element={<RecipesPage />} />
-          <Route path="suppliers" element={<SuppliersPage />} />
-          <Route path="settings" element={<PlaceholderPage title="Settings" description="Configure cafe preferences, taxes, service areas, and devices." />} />
+          <Route path="menu" element={<PermissionRoute permission={PERMISSION.MANAGE_MENU}><MenuManagementPage /></PermissionRoute>} />
+          <Route path="categories" element={<PermissionRoute permission={PERMISSION.MANAGE_MENU}><CategoriesPage /></PermissionRoute>} />
+          <Route path="orders" element={<PermissionRoute permission={PERMISSION.MANAGE_ORDERS}><OrderManagementPage /></PermissionRoute>} />
+          <Route path="inventory" element={<PermissionRoute permission={PERMISSION.MANAGE_INVENTORY}><InventoryPage /></PermissionRoute>} />
+          <Route path="employees" element={<PermissionRoute permission={PERMISSION.MANAGE_EMPLOYEES}><EmployeesPage /></PermissionRoute>} />
+          <Route path="roles" element={<PermissionRoute permission={PERMISSION.MANAGE_EMPLOYEES}><RolesPage /></PermissionRoute>} />
+          <Route path="reports" element={<PermissionRoute permission={PERMISSION.VIEW_REPORTS}><ReportsPage /></PermissionRoute>} />
+          <Route path="recipes" element={<PermissionRoute permission={PERMISSION.MANAGE_MENU}><RecipesPage /></PermissionRoute>} />
+          <Route path="suppliers" element={<PermissionRoute permission={PERMISSION.MANAGE_INVENTORY}><SuppliersPage /></PermissionRoute>} />
+          <Route path="audit-logs" element={<PermissionRoute permission={PERMISSION.MANAGE_EMPLOYEES}><AuditLogsPage /></PermissionRoute>} />
+          <Route path="settings" element={<PermissionRoute permission={PERMISSION.MANAGE_SETTINGS}><PlaceholderPage title="Settings" description="Configure cafe preferences, taxes, service areas, and devices." /></PermissionRoute>} />
         </Route>
 
         <Route
@@ -87,10 +96,10 @@ export default function App() {
           }
         >
           <Route index element={<CashierDashboard />} />
-          <Route path="pos" element={<PlaceholderPage title="Point of Sale" description="The transactional POS workflow is scheduled after menu and inventory services." />} />
-          <Route path="orders" element={<OrderManagementPage />} />
-          <Route path="payments" element={<PlaceholderPage title="Payments" description="Payment capture and history are scheduled in Phase 7." />} />
-          <Route path="receipts" element={<PlaceholderPage title="Receipts" description="Receipt lookup and printing are scheduled in Phase 7." />} />
+          <Route path="pos" element={<PermissionRoute permission={PERMISSION.TAKE_PAYMENT}><PlaceholderPage title="Point of Sale" description="The transactional POS workflow is scheduled after menu and inventory services." /></PermissionRoute>} />
+          <Route path="orders" element={<PermissionRoute permission={PERMISSION.MANAGE_ORDERS}><OrderManagementPage /></PermissionRoute>} />
+          <Route path="payments" element={<PermissionRoute permission={PERMISSION.TAKE_PAYMENT}><PlaceholderPage title="Payments" description="Payment capture and history are scheduled in Phase 7." /></PermissionRoute>} />
+          <Route path="receipts" element={<PermissionRoute permission={PERMISSION.TAKE_PAYMENT}><PlaceholderPage title="Receipts" description="Receipt lookup and printing are scheduled in Phase 7." /></PermissionRoute>} />
         </Route>
 
         <Route
@@ -102,9 +111,9 @@ export default function App() {
           }
         >
           <Route index element={<WaiterDashboard />} />
-          <Route path="menu" element={<WaiterDashboard />} />
-          <Route path="orders" element={<WaiterOrdersPage />} />
-          <Route path="checkout" element={<WaiterCheckoutPage />} />
+          <Route path="menu" element={<PermissionRoute permission={PERMISSION.CREATE_ORDER}><WaiterDashboard /></PermissionRoute>} />
+          <Route path="orders" element={<PermissionRoute permission={PERMISSION.MANAGE_ORDERS}><WaiterOrdersPage /></PermissionRoute>} />
+          <Route path="checkout" element={<PermissionRoute permission={PERMISSION.MANAGE_ORDERS}><WaiterCheckoutPage /></PermissionRoute>} />
         </Route>
 
         <Route
@@ -116,8 +125,8 @@ export default function App() {
           }
         >
           <Route index element={<ChefDashboard />} />
-          <Route path="queue" element={<ChefDashboard />} />
-          <Route path="prep" element={<PlaceholderPage title="Prep List" description="Ingredient prep and batch production planning." />} />
+          <Route path="queue" element={<PermissionRoute permission={PERMISSION.PREPARE_ORDERS}><ChefDashboard /></PermissionRoute>} />
+          <Route path="prep" element={<PermissionRoute permission={PERMISSION.VIEW_PUBLIC_MENU}><PlaceholderPage title="Inventory alerts" description="Ingredient alerts and preparation planning." /></PermissionRoute>} />
         </Route>
 
         <Route path="/dashboard" element={<RoleRedirect />} />

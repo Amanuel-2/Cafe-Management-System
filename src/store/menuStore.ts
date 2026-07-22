@@ -43,7 +43,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
   },
 
   setAvailability: async (id, available) => {
-    const item = menuService.update(id, { available });
+    const item = menuService.setAvailability(id, available);
     if (item) get().upsertMenuItem(item);
   },
 
