@@ -23,7 +23,7 @@ type WaiterCartState = {
 };
 
 export const useWaiterCartStore = create<WaiterCartState>((set) => ({
-  table: 'T-01',
+  table: 'table-01',
   items: [],
   setTable: (table) => set({ table }),
   addItem: (item) =>
@@ -67,7 +67,7 @@ export const useWaiterCartStore = create<WaiterCartState>((set) => ({
     set((state) => ({
       items: state.items.map((item) => (item.menuItemId === menuItemId ? { ...item, notes } : item)),
     })),
-  clearCart: () => set({ items: [] }),
+  clearCart: () => set({ items: [], table: 'table-01' }),
 }));
 
 export function mapCartItemsToOrderItems(items: CartItem[]): OrderItem[] {

@@ -1,13 +1,15 @@
-import { BarChart3, Boxes, ChefHat, ClipboardList, LayoutDashboard, ScrollText, Settings, ShieldCheck, ShoppingBag, Tags, Truck, Users } from 'lucide-react';
+import { Armchair, BarChart3, Boxes, ChefHat, ClipboardList, LayoutDashboard, ScrollText, Settings, ShieldCheck, ShoppingBag, ShoppingCart, Tags, Truck, Users } from 'lucide-react';
 import { StaffLayout } from './StaffLayout';
 import { PERMISSION } from '../routes/access';
 
 const navItems = [
   { label: 'Dashboard', to: '/admin', icon: LayoutDashboard, end: true },
   { label: 'Orders', to: '/admin/orders', icon: ClipboardList, permission: PERMISSION.MANAGE_ORDERS },
+  { label: 'Tables', to: '/admin/tables', icon: Armchair, permission: PERMISSION.MANAGE_ORDERS },
   { label: 'Menu', to: '/admin/menu', icon: ShoppingBag, permission: PERMISSION.MANAGE_MENU },
   { label: 'Categories', to: '/admin/categories', icon: Tags, permission: PERMISSION.MANAGE_MENU },
   { label: 'Inventory', to: '/admin/inventory', icon: Boxes, permission: PERMISSION.MANAGE_INVENTORY },
+  { label: 'Purchasing', to: '/admin/purchasing', icon: ShoppingCart, permission: PERMISSION.MANAGE_INVENTORY },
   { label: 'Employees', to: '/admin/employees', icon: Users, permission: PERMISSION.MANAGE_EMPLOYEES },
   { label: 'Roles', to: '/admin/roles', icon: ShieldCheck, permission: PERMISSION.MANAGE_EMPLOYEES },
   { label: 'Recipes', to: '/admin/recipes', icon: ChefHat, permission: PERMISSION.MANAGE_MENU },

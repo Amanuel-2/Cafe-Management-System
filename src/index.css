@@ -38,3 +38,26 @@ img {
 #root {
   min-height: 100vh;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .MuiDialog-paper,
+  .MuiDialog-paper * {
+    visibility: visible;
+  }
+
+  .MuiDialog-paper {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    max-width: none;
+    box-shadow: none;
+  }
+
+  .MuiDialogActions-root {
+    display: none !important;
+  }
+}

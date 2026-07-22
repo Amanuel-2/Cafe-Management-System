@@ -12,24 +12,28 @@ import { useOrderStore } from '../../store/orderStore';
 import { mapCartItemsToOrderItems, useWaiterCartStore } from '../../store/waiterCartStore';
 import { useState } from 'react';
 import { formatETB } from '../../utils/currency';
-
-const tableOptions = Array.from({ length: 12 }, (_, index) => {
-  const table = `T-${String(index + 1).padStart(2, '0')}`;
-  return { label: table, value: table };
-});
+import { tableService } from '../../services/tableService';
 
 export function WaiterCheckoutPage() {
   const { user } = useAuth();
   const addOrder = useOrderStore((state) => state.addOrder);
   const { table, items, setTable, incrementItem, decrementItem, removeItem, updateNotes, clearCart } = useWaiterCartStore();
   const [toast, setToast] = useState('');
+  const tables = tableService.list();
+  const selectedTable = tables.find((entry) => entry.id === table);
+  const tableOptions = tables.filter((entry) => entry.status === 'available' || entry.id === table).map((entry) => ({ label: `${entry.name} · ${entry.section} · ${entry.capacity} seats`, value: entry.id }));
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
   const serviceFee = subtotal * 0.08;
   const total = subtotal + serviceFee;
 
   const submitOrder = async () => {
+    if (!selectedTable || selectedTable.status !== 'available') {
+      setToast('Choose an available table before placing the order');
+      return;
+    }
     const order = await addOrder({
-      table,
+      tableId: selectedTable.id,
+      table: selectedTable.name,
       waiterName: user?.name ?? 'Demo Waiter',
       items: mapCartItemsToOrderItems(items),
     });
@@ -86,13 +90,13 @@ export function WaiterCheckoutPage() {
           <CardHeader><CardTitle>Order Summary</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <Select label="Table" value={table} onChange={(event) => setTable(event.target.value)} options={tableOptions} />
-            <Input label="Payment method" value="Demo card ending 4242" readOnly />
+            <Input label="Payment" value="Collected by cashier after bill request" readOnly />
             <div className="space-y-2 border-t border-stone-200 pt-4 text-sm dark:border-stone-800">
               <div className="flex justify-between"><span>Subtotal</span><span>{formatETB(subtotal)}</span></div>
               <div className="flex justify-between"><span>Service demo</span><span>{formatETB(serviceFee)}</span></div>
               <div className="flex justify-between text-lg font-semibold text-stone-950 dark:text-stone-50"><span>Total</span><span>{formatETB(total)}</span></div>
             </div>
-            <Button className="w-full" size="lg" Icon={CreditCard} disabled={items.length === 0} onClick={submitOrder}>Place demo order</Button>
+            <Button className="w-full" size="lg" Icon={CreditCard} disabled={items.length === 0 || !selectedTable || selectedTable.status !== 'available'} onClick={submitOrder}>Send order to kitchen</Button>
           </CardContent>
         </Card>
         <Card className="p-4">

@@ -2,7 +2,7 @@ export type OrderStatus = 'pending' | 'accepted' | 'preparing' | 'ready' | 'serv
 
 export type PaymentStatus = 'paid' | 'unpaid';
 
-export type PaymentMethod = 'cash' | 'telebirr' | 'cbe_birr' | 'dashen' | 'bank_transfer' | 'other';
+export type PaymentMethod = 'cash' | 'card' | 'mobile' | 'telebirr' | 'cbe_birr' | 'dashen' | 'bank_transfer' | 'other';
 
 export type ItemStatus = 'pending' | 'preparing' | 'ready';
 
@@ -44,6 +44,7 @@ export type Order = {
   id: string;
   receiptNumber: string;
   table: string;
+  tableId: string;
   waiterName: string;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
@@ -54,6 +55,8 @@ export type Order = {
   servedAt?: string;
   paidAt?: string;
   collectedBy?: string;
+  billRequested?: boolean;
+  billRequestedAt?: string;
   items: OrderItem[];
   subtotal: number;
   tax: number;

@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatETB } from '../../utils/currency';
+import { tableService } from '../../services/tableService';
 
 function AnimatedAddButton({ onClick, item }: { onClick: () => void; item: any }) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -157,6 +158,8 @@ export function WaiterDashboard() {
   const orders = useOrderStore((state) => state.orders);
   const { addItem } = useWaiterCartStore();
   const cartItems = useWaiterCartStore((state) => state.items);
+  const selectedTableId = useWaiterCartStore((state) => state.table);
+  const selectedTable = tableService.getById(selectedTableId);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -177,7 +180,7 @@ export function WaiterDashboard() {
     return menuItems.filter(item => {
       const matchesSearch = item.name.toLowerCase().includes(normalizedQuery);
       const matchesCategory = selectedCategoryId === 'all' || item.categoryId === selectedCategoryId;
-      return matchesSearch && matchesCategory;
+      return item.available && matchesSearch && matchesCategory;
     });
   }, [menuItems, selectedCategoryId, searchQuery]);
 
@@ -185,7 +188,7 @@ export function WaiterDashboard() {
     <div className="grid gap-5 xl:grid-cols-[1fr_360px] pb-24">
       <section className="space-y-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between flex-wrap">
-          <h1 className="text-2xl font-semibold">Menu</h1>
+          <div><h1 className="text-2xl font-semibold">Menu · {selectedTable?.name ?? 'No table selected'}</h1><p className="text-sm text-stone-500">{selectedTable ? `${selectedTable.section} · ${selectedTable.capacity} seats` : 'Return to the floor and select an available table.'}</p></div>
           <div className="flex flex-col gap-3 md:w-auto md:flex-row md:items-center">
             <SearchInput
               value={searchQuery}

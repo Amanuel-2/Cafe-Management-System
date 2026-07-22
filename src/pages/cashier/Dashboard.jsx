@@ -1,43 +1,13 @@
-import { Card, CardContent, Chip, Grid, Stack, Typography } from '@mui/material';
-
-const cards = [
-  { label: "Today's sales", value: 'ETB 0.00', note: 'Completed payments' },
-  { label: 'Open orders', value: '0', note: 'Awaiting checkout' },
-  { label: 'Receipts', value: '0', note: 'Issued today' },
-];
+import { Button, Chip, Grid, Stack, Typography } from '@mui/material';
+import { Banknote, CreditCard, ReceiptText, ShoppingCart } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { MetricCard } from '../../components/common/MetricCard';
+import { PageHeader } from '../../components/common/PageHeader';
+import { orderService } from '../../services/orderService';
+import { paymentService } from '../../services/paymentService';
+import { formatETB } from '../../utils/currency';
 
 export function CashierDashboard() {
-  return (
-    <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={2}>
-        <div>
-          <Typography variant="h4">Cashier dashboard</Typography>
-          <Typography color="text.secondary">Process orders, payments, and receipts from one workspace.</Typography>
-        </div>
-        <Chip color="success" label="Register open" sx={{ alignSelf: 'flex-start' }} />
-      </Stack>
-      <Grid container spacing={2}>
-        {cards.map((card) => (
-          <Grid key={card.label} size={{ xs: 12, md: 4 }}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography color="text.secondary" variant="body2">{card.label}</Typography>
-                <Typography variant="h4" sx={{ my: 1 }}>{card.value}</Typography>
-                <Typography color="text.secondary" variant="caption">{card.note}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      <Card variant="outlined">
-        <CardContent>
-          <Typography variant="h6">POS foundation ready</Typography>
-          <Typography color="text.secondary" sx={{ mt: 1 }}>
-            The dedicated POS, payment, and receipt workflows are scheduled in Phase 7 after menu, inventory, and order services are complete.
-          </Typography>
-        </CardContent>
-      </Card>
-    </Stack>
-  );
+  const summary = paymentService.todaySummary(); const orders = orderService.list(); const awaiting = orders.filter((order) => order.status === 'served' && order.paymentStatus === 'unpaid'); const receipts = paymentService.listReceipts();
+  return <Stack spacing={3}><PageHeader eyebrow="Cashier station" title="Sales overview" description="Monitor bill requests, today’s collections, and completed receipts." actions={<Button component={Link} to="/cashier/pos" variant="contained" startIcon={<ShoppingCart size={18} />}>Open POS</Button>} /><Grid container spacing={2}><Grid size={{ xs: 12, sm: 6, lg: 3 }}><MetricCard label="Today's sales" value={formatETB(summary.sales)} helper="Completed payments" icon={Banknote} /></Grid><Grid size={{ xs: 12, sm: 6, lg: 3 }}><MetricCard label="Transactions" value={summary.payments.length} helper="Payments today" icon={CreditCard} tone="success" /></Grid><Grid size={{ xs: 12, sm: 6, lg: 3 }}><MetricCard label="Awaiting payment" value={awaiting.length} helper="Served table orders" icon={ShoppingCart} tone={awaiting.length ? 'warning' : 'success'} /></Grid><Grid size={{ xs: 12, sm: 6, lg: 3 }}><MetricCard label="Receipts" value={receipts.length} helper="Available for lookup" icon={ReceiptText} tone="neutral" /></Grid></Grid><Stack spacing={1.5}><Stack direction="row" justifyContent="space-between" alignItems="center"><Typography variant="h6" fontWeight={850}>Bills awaiting payment</Typography><Button component={Link} to="/cashier/pos">View in POS</Button></Stack>{awaiting.map((order) => <Stack key={order.id} direction="row" justifyContent="space-between" alignItems="center" sx={{ border: 1, borderColor: order.billRequested ? 'primary.main' : 'divider', borderRadius: 2.5, p: 2, bgcolor: 'background.paper' }}><Stack><Typography fontWeight={800}>{order.table} · {order.receiptNumber}</Typography><Typography variant="body2" color="text.secondary">{order.items.reduce((sum, item) => sum + item.quantity, 0)} items · {order.waiterName}</Typography></Stack><Stack alignItems="flex-end"><Typography fontWeight={850}>{formatETB(order.total)}</Typography>{order.billRequested ? <Chip size="small" color="info" label="Bill requested" /> : null}</Stack></Stack>)}{!awaiting.length ? <Typography color="text.secondary">No served orders are waiting for payment.</Typography> : null}</Stack></Stack>;
 }
-
