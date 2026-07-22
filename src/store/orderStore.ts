@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import { socket } from '../services/socket';
 import type { ItemStatus, Order, OrderStatus, PaymentMethod } from '../types/domain';
-import { useEffect } from 'react';
+import { database } from '../services/database';
 
 type OrderState = {
   orders: Order[];
@@ -18,8 +17,13 @@ type OrderState = {
   cancelOrder: (orderId: string) => void;
 };
 
-export const useOrderStore = create<OrderState>((set) => ({
-  orders: [],
+const addTimelineEvent = (order: Order, title: string) => ({
+  ...order,
+  timeline: [...order.timeline, { id: `timeline-${Date.now()}`, title, timestamp: new Date().toISOString(), completed: true }],
+});
+
+export const useOrderStore = create<OrderState>((set, get) => ({
+  orders: database.list('orders') as Order[],
   setOrders: (orders) => set({ orders }),
   prependOrder: (order) => set((state) => ({ orders: [order, ...state.orders] })),
   upsertOrder: (order) => set((state) => ({
@@ -29,78 +33,66 @@ export const useOrderStore = create<OrderState>((set) => ({
   })),
 
   addOrder: async (orderData) => {
-    socket.emit('order:create', orderData);
-    const newOrder = await new Promise<Order>((resolve) => {
-      const handler = (order: Order) => {
-        resolve(order);
-        socket.off('order:created', handler);
-      };
-      socket.on('order:created', handler);
-    });
+    const subtotal = orderData.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const tax = subtotal * (database.getSettings().taxRate / 100);
+    const createdAt = new Date().toISOString();
+    const orderNumber = database.list('orders').length + 1001;
+    const newOrder = database.create('orders', {
+      ...orderData,
+      receiptNumber: `RCP-${new Date().getFullYear()}-${orderNumber}`,
+      status: 'pending',
+      paymentStatus: 'unpaid',
+      subtotal,
+      tax,
+      discount: 0,
+      total: subtotal + tax,
+      createdAt,
+      timeline: [{ id: `timeline-${Date.now()}`, title: 'Order Created', timestamp: createdAt, completed: true }],
+    }, 'order') as Order;
+    get().prependOrder(newOrder);
     return newOrder;
   },
 
   updateOrderStatus: (orderId, status, collectedBy) => {
-    socket.emit('order:update', { id: orderId, status, collectedBy });
+    const order = database.get('orders', orderId) as Order | null;
+    if (!order) return;
+    const timestampField = status === 'preparing' ? 'acceptedAt' : status === 'ready' ? 'readyAt' : status === 'served' ? 'servedAt' : null;
+    const values = { status, ...(collectedBy ? { collectedBy } : {}), ...(timestampField ? { [timestampField]: new Date().toISOString() } : {}) };
+    const updated = database.update('orders', orderId, values) as Order;
+    get().upsertOrder(addTimelineEvent(updated, status === 'preparing' ? 'Chef Accepted' : `Order ${status}`));
+    database.update('orders', orderId, get().orders.find((item) => item.id === orderId));
   },
 
   updateItemStatus: (orderId, itemId, status) => {
-    socket.emit('order:update', { id: orderId, itemId, itemStatus: status });
+    const order = database.get('orders', orderId) as Order | null;
+    if (!order) return;
+    const updated = database.update('orders', orderId, { items: order.items.map((item) => item.id === itemId ? { ...item, status } : item) }) as Order;
+    get().upsertOrder(updated);
   },
 
   acceptOrder: (orderId) => {
-    socket.emit('order:update', { id: orderId, status: 'preparing' });
+    get().updateOrderStatus(orderId, 'preparing');
   },
 
   markOrderReady: (orderId) => {
-    socket.emit('order:update', { id: orderId, status: 'ready' });
+    get().updateOrderStatus(orderId, 'ready');
   },
 
   markOrderServed: (orderId) => {
-    socket.emit('order:update', { id: orderId, status: 'served' });
+    get().updateOrderStatus(orderId, 'served');
   },
 
   markOrderPaid: (orderId, paymentMethod, collectedBy) => {
-    socket.emit('order:update', { id: orderId, paymentStatus: 'paid', paymentMethod, collectedBy });
+    const order = database.get('orders', orderId) as Order | null;
+    if (!order) return;
+    const paidAt = new Date().toISOString();
+    const updated = database.update('orders', orderId, { paymentStatus: 'paid', paymentMethod, collectedBy, paidAt }) as Order;
+    const withTimeline = addTimelineEvent(updated, 'Order Paid');
+    database.update('orders', orderId, withTimeline);
+    get().upsertOrder(withTimeline);
   },
 
   cancelOrder: (orderId) => {
-    socket.emit('order:update', { id: orderId, status: 'cancelled' });
+    get().updateOrderStatus(orderId, 'cancelled');
   },
 }));
-
-export function useOrderSocketSync() {
-  const setOrders = useOrderStore((state) => state.setOrders);
-  const prependOrder = useOrderStore((state) => state.prependOrder);
-  const upsertOrder = useOrderStore((state) => state.upsertOrder);
-
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await fetch('/api/orders');
-        const data = await res.json();
-        setOrders(data);
-      } catch (err) {
-        console.error('Failed to fetch orders:', err);
-      }
-    };
-
-    fetchOrders();
-
-    const handleOrderCreated = (order: Order) => {
-      prependOrder(order);
-    };
-
-    const handleOrderUpdated = (updatedOrder: Order) => {
-      upsertOrder(updatedOrder);
-    };
-
-    socket.on('order:created', handleOrderCreated);
-    socket.on('order:updated', handleOrderUpdated);
-
-    return () => {
-      socket.off('order:created', handleOrderCreated);
-      socket.off('order:updated', handleOrderUpdated);
-    };
-  }, [prependOrder, setOrders, upsertOrder]);
-}

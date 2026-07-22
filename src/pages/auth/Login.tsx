@@ -1,4 +1,4 @@
-import { Coffee, LockKeyhole, Mail } from 'lucide-react';
+import { Banknote, ChefHat, Coffee, ShieldCheck, UtensilsCrossed } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -28,7 +28,7 @@ export function LoginPage() {
     setError,
     setValue,
   } = useForm<LoginForm>({
-    defaultValues: { email: 'admin@cafe.test', password: 'admin123' },
+    defaultValues: { email: 'admin@restaurant.com', password: '123456' },
   });
 
   if (user) return <Navigate to={roleHomePath[user.role]} replace />;
@@ -67,7 +67,7 @@ export function LoginPage() {
         </div>
         <div>
           <CardTitle className="text-2xl">Sign in to Cafe Manager</CardTitle>
-          <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">Use a demo role to preview each dashboard.</p>
+          <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">Sign in with an active restaurant staff account.</p>
         </div>
       </CardHeader>
       <CardContent>
@@ -81,9 +81,10 @@ export function LoginPage() {
           </Button>
         </form>
         <div className="mt-5 grid gap-2 text-sm">
-          <Button variant="outline" Icon={Mail} onClick={() => useDemo('admin@cafe.test', 'admin123')}>Admin demo</Button>
-          <Button variant="outline" Icon={LockKeyhole} onClick={() => useDemo('waiter@cafe.test', 'waiter123')}>Waiter demo</Button>
-          <Button variant="outline" Icon={Coffee} onClick={() => useDemo('chef@cafe.test', 'chef123')}>Chef demo</Button>
+          <Button variant="outline" Icon={ShieldCheck} onClick={() => useDemo('admin@restaurant.com', '123456')}>Admin account</Button>
+          <Button variant="outline" Icon={Banknote} onClick={() => useDemo('cashier@restaurant.com', '123456')}>Cashier account</Button>
+          <Button variant="outline" Icon={UtensilsCrossed} onClick={() => useDemo('waiter@restaurant.com', '123456')}>Waiter account</Button>
+          <Button variant="outline" Icon={ChefHat} onClick={() => useDemo('chef@restaurant.com', '123456')}>Chef account</Button>
         </div>
       </CardContent>
     </Card>

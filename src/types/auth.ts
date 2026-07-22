@@ -1,7 +1,9 @@
 export enum UserRole {
   Admin = 'admin',
+  Cashier = 'cashier',
   Waiter = 'waiter',
   Chef = 'chef',
+  Consumer = 'consumer',
 }
 
 export type User = {
@@ -9,6 +11,7 @@ export type User = {
   name: string;
   email: string;
   role: UserRole;
+  status?: 'active' | 'inactive';
   avatarUrl?: string;
 };
 
