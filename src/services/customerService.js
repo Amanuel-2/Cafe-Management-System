@@ -1,0 +1,13 @@
+import { database } from './database.js';
+
+function audit(action, actor, customer, message) { database.create('auditLogs', { action, actorId: actor?.id ?? 'system', actorName: actor?.name ?? 'System', entityType: 'customer', entityId: customer.id, message }, 'audit'); }
+function validate(values, currentId) { const name = values.name.trim(); if (name.length < 2) throw new Error('Customer name must contain at least 2 characters.'); if (!values.phone?.trim() && !values.email?.trim()) throw new Error('Provide a phone number or email address.'); if (values.email && database.list('customers').some((customer) => customer.id !== currentId && customer.email?.toLowerCase() === values.email.toLowerCase())) throw new Error('A customer with this email already exists.'); }
+
+export const customerService = {
+  list() { return database.list('customers').sort((a, b) => a.name.localeCompare(b.name)); },
+  getById(id) { return database.get('customers', id); },
+  create(values, actor) { validate(values); const customer = database.create('customers', { ...values, name: values.name.trim(), phone: values.phone.trim(), email: values.email.trim().toLowerCase(), status: values.status ?? 'active' }, 'customer'); audit('customer.create', actor, customer, `${actor?.name ?? 'System'} created customer ${customer.name}`); return customer; },
+  update(id, values, actor) { if (!this.getById(id)) throw new Error('Customer not found.'); validate(values, id); const customer = database.update('customers', id, { ...values, name: values.name.trim(), phone: values.phone.trim(), email: values.email.trim().toLowerCase() }); audit('customer.update', actor, customer, `${actor?.name ?? 'System'} updated customer ${customer.name}`); return customer; },
+  remove(id, actor) { const customer = this.getById(id); if (!customer) throw new Error('Customer not found.'); if (database.list('orders').some((order) => order.customerId === id)) throw new Error('Customers with order history cannot be deleted. Mark the customer inactive instead.'); database.remove('customers', id); audit('customer.delete', actor, customer, `${actor?.name ?? 'System'} deleted customer ${customer.name}`); return true; },
+  getSummary(id) { const orders = database.list('orders').filter((order) => order.customerId === id && order.paymentStatus === 'paid'); const itemCounts = new Map(); orders.flatMap((order) => order.items).forEach((item) => itemCounts.set(item.name, (itemCounts.get(item.name) ?? 0) + item.quantity)); const favoriteFood = [...itemCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'No purchases yet'; return { orders: orders.sort((a, b) => b.createdAt.localeCompare(a.createdAt)), visits: orders.length, spend: orders.reduce((sum, order) => sum + order.total, 0), favoriteFood }; },
+};

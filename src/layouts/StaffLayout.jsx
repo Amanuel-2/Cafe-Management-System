@@ -18,13 +18,14 @@ import {
   Typography,
 } from '@mui/material';
 import { Menu, UtensilsCrossed, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link as RouterLink, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { NotificationPanel } from '../components/common/NotificationPanel';
 import { ProfileMenu } from '../components/common/ProfileMenu';
 import { ThemeSwitch } from '../components/common/ThemeSwitch';
 import { useAuth } from '../hooks/useAuth';
 import { roleService } from '../services/roleService';
+import { database } from '../services/database';
 
 const DRAWER_WIDTH = 272;
 
@@ -62,24 +63,12 @@ function Navigation({ items, onNavigate }) {
   );
 }
 
-function Brand({ workspace, onClose, mobile }) {
+function Brand({ workspace, onClose, mobile, restaurantName, logo }) {
   return (
     <Toolbar sx={{ minHeight: 72, gap: 1.5, px: 2 }}>
-      <Box
-        sx={{
-          display: 'grid',
-          placeItems: 'center',
-          width: 40,
-          height: 40,
-          borderRadius: 2.5,
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
-        }}
-      >
-        <UtensilsCrossed size={21} aria-hidden="true" />
-      </Box>
+      <Box sx={{ display: 'grid', placeItems: 'center', width: 40, height: 40, borderRadius: 2.5, bgcolor: 'primary.main', color: 'primary.contrastText', overflow: 'hidden' }}>{logo ? <Box component="img" src={logo} alt="" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <UtensilsCrossed size={21} aria-hidden="true" />}</Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography noWrap sx={{ fontWeight: 900, lineHeight: 1.2 }}>Restaurant OS</Typography>
+        <Typography noWrap sx={{ fontWeight: 900, lineHeight: 1.2 }}>{restaurantName}</Typography>
         <Typography noWrap variant="caption" color="text.secondary">{workspace}</Typography>
       </Box>
       {mobile ? (
@@ -93,6 +82,8 @@ function Brand({ workspace, onClose, mobile }) {
 
 export function StaffLayout({ workspace, roleLabel, navItems }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [settings, setSettings] = useState(() => database.getSettings());
+  useEffect(() => { const refreshSettings = (event) => { if (String(event.detail?.collection ?? '').includes('settings')) setSettings(database.getSettings()); }; window.addEventListener(database.changeEvent, refreshSettings); return () => window.removeEventListener(database.changeEvent, refreshSettings); }, []);
   const location = useLocation();
   const { user } = useAuth();
   const allowedNavItems = navItems.filter((item) => roleService.userHasPermission(user, item.permission));
@@ -104,7 +95,7 @@ export function StaffLayout({ workspace, roleLabel, navItems }) {
   const pathSegments = location.pathname.split('/').filter(Boolean);
   const drawerContent = (mobile = false) => (
     <Box sx={{ display: 'flex', height: '100%', flexDirection: 'column' }}>
-      <Brand workspace={workspace} mobile={mobile} onClose={() => setMobileOpen(false)} />
+      <Brand workspace={workspace} mobile={mobile} onClose={() => setMobileOpen(false)} restaurantName={settings.restaurantName} logo={settings.logo} />
       <Divider />
       <Box sx={{ flex: 1, overflowY: 'auto' }}>
         <Navigation items={allowedNavItems} onNavigate={() => setMobileOpen(false)} />

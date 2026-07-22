@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from '@mui/material';
 
-export function PageHeader({ title, description, eyebrow, action }) {
+export function PageHeader({ title, description, eyebrow, action, actions }) {
+  const headerAction = action ?? actions;
   return (
     <Stack
       component="header"
@@ -20,8 +21,7 @@ export function PageHeader({ title, description, eyebrow, action }) {
           <Typography color="text.secondary" sx={{ mt: 0.75, maxWidth: 720 }}>{description}</Typography>
         ) : null}
       </Box>
-      {action ? <Box sx={{ flexShrink: 0 }}>{action}</Box> : null}
+      {headerAction ? <Box sx={{ flexShrink: 0 }}>{headerAction}</Box> : null}
     </Stack>
   );
 }
-

@@ -1,5 +1,5 @@
 const DATABASE_KEY = 'restaurant-management-db';
-const DATABASE_VERSION = 6;
+const DATABASE_VERSION = 7;
 const CHANGE_EVENT = 'restaurant:database-change';
 
 const now = () => new Date().toISOString();
@@ -85,9 +85,14 @@ const initialDatabase = () => ({
   auditLogs: [],
   settings: {
     restaurantName: 'Restaurant Manager',
+    logo: '/favicon.svg',
     currency: 'ETB',
     taxRate: 15,
-    openingHours: [],
+    openingHours: 'Mon–Sun, 7:00 AM–10:00 PM',
+    address: 'Addis Ababa, Ethiopia',
+    phone: '+251 911 000 000',
+    email: 'hello@restaurant.example',
+    receiptFooter: 'Thank you for dining with us.',
   },
 });
 

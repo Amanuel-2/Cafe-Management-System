@@ -1,4 +1,4 @@
-import { Armchair, BarChart3, Boxes, ChefHat, ClipboardList, LayoutDashboard, ScrollText, Settings, ShieldCheck, ShoppingBag, ShoppingCart, Tags, Truck, Users } from 'lucide-react';
+import { Armchair, BarChart3, Boxes, ChefHat, CircleDollarSign, ClipboardList, LayoutDashboard, ScrollText, Settings, ShieldCheck, ShoppingBag, ShoppingCart, Tags, Truck, UserRound, Users } from 'lucide-react';
 import { StaffLayout } from './StaffLayout';
 import { PERMISSION } from '../routes/access';
 
@@ -6,6 +6,8 @@ const navItems = [
   { label: 'Dashboard', to: '/admin', icon: LayoutDashboard, end: true },
   { label: 'Orders', to: '/admin/orders', icon: ClipboardList, permission: PERMISSION.MANAGE_ORDERS },
   { label: 'Tables', to: '/admin/tables', icon: Armchair, permission: PERMISSION.MANAGE_ORDERS },
+  { label: 'Customers', to: '/admin/customers', icon: UserRound, permission: PERMISSION.MANAGE_ORDERS },
+  { label: 'Expenses', to: '/admin/expenses', icon: CircleDollarSign, permission: PERMISSION.VIEW_REPORTS },
   { label: 'Menu', to: '/admin/menu', icon: ShoppingBag, permission: PERMISSION.MANAGE_MENU },
   { label: 'Categories', to: '/admin/categories', icon: Tags, permission: PERMISSION.MANAGE_MENU },
   { label: 'Inventory', to: '/admin/inventory', icon: Boxes, permission: PERMISSION.MANAGE_INVENTORY },

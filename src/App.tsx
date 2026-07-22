@@ -33,6 +33,9 @@ const WaiterCheckoutPage = lazyNamed(() => import('./features/orders/WaiterCheck
 const OrderManagementPage = lazyNamed(() => import('./features/orders/OrderManagementPage'), 'OrderManagementPage');
 const InventoryPage = lazyNamed(() => import('./features/inventory/InventoryPage'), 'InventoryPage');
 const TablesPage = lazyNamed(() => import('./features/tables/TablesPage'), 'TablesPage');
+const CustomersPage = lazyNamed(() => import('./features/customers/CustomersPage'), 'CustomersPage');
+const ExpensesPage = lazyNamed(() => import('./features/expenses/ExpensesPage'), 'ExpensesPage');
+const SettingsPage = lazyNamed(() => import('./features/settings/SettingsPage'), 'SettingsPage');
 const WaiterFloorPage = lazyNamed(() => import('./features/tables/WaiterFloorPage'), 'WaiterFloorPage');
 const PurchaseOrdersPage = lazyNamed(() => import('./features/purchasing/PurchaseOrdersPage'), 'PurchaseOrdersPage');
 const EmployeesPage = lazyNamed(() => import('./features/employees/EmployeesPage'), 'EmployeesPage');
@@ -84,6 +87,8 @@ export default function App() {
           <Route path="categories" element={<PermissionRoute permission={PERMISSION.MANAGE_MENU}><CategoriesPage /></PermissionRoute>} />
           <Route path="orders" element={<PermissionRoute permission={PERMISSION.MANAGE_ORDERS}><OrderManagementPage /></PermissionRoute>} />
           <Route path="tables" element={<PermissionRoute permission={PERMISSION.MANAGE_ORDERS}><TablesPage /></PermissionRoute>} />
+          <Route path="customers" element={<PermissionRoute permission={PERMISSION.MANAGE_ORDERS}><CustomersPage /></PermissionRoute>} />
+          <Route path="expenses" element={<PermissionRoute permission={PERMISSION.VIEW_REPORTS}><ExpensesPage /></PermissionRoute>} />
           <Route path="inventory" element={<PermissionRoute permission={PERMISSION.MANAGE_INVENTORY}><InventoryPage /></PermissionRoute>} />
           <Route path="purchasing" element={<PermissionRoute permission={PERMISSION.MANAGE_INVENTORY}><PurchaseOrdersPage /></PermissionRoute>} />
           <Route path="employees" element={<PermissionRoute permission={PERMISSION.MANAGE_EMPLOYEES}><EmployeesPage /></PermissionRoute>} />
@@ -92,7 +97,7 @@ export default function App() {
           <Route path="recipes" element={<PermissionRoute permission={PERMISSION.MANAGE_MENU}><RecipesPage /></PermissionRoute>} />
           <Route path="suppliers" element={<PermissionRoute permission={PERMISSION.MANAGE_INVENTORY}><SuppliersPage /></PermissionRoute>} />
           <Route path="audit-logs" element={<PermissionRoute permission={PERMISSION.MANAGE_EMPLOYEES}><AuditLogsPage /></PermissionRoute>} />
-          <Route path="settings" element={<PermissionRoute permission={PERMISSION.MANAGE_SETTINGS}><PlaceholderPage title="Settings" description="Configure cafe preferences, taxes, service areas, and devices." /></PermissionRoute>} />
+          <Route path="settings" element={<PermissionRoute permission={PERMISSION.MANAGE_SETTINGS}><SettingsPage /></PermissionRoute>} />
         </Route>
 
         <Route
