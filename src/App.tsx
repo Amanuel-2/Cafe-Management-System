@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Spinner } from './components/ui/Spinner';
+import { RouteErrorBoundary } from './components/common/RouteErrorBoundary';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { RoleRedirect } from './routes/RoleRedirect';
 import { STAFF_ROUTE_ROLES } from './routes/access';
@@ -45,8 +46,9 @@ function RouteFallback() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<RouteFallback />}>
-        <Routes>
+      <RouteErrorBoundary>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
         </Route>
@@ -121,8 +123,9 @@ export default function App() {
         <Route path="/dashboard" element={<RoleRedirect />} />
         <Route path="*" element={<NotFound />} />
         <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
-        </Routes>
-      </Suspense>
+          </Routes>
+        </Suspense>
+      </RouteErrorBoundary>
     </BrowserRouter>
   );
 }
