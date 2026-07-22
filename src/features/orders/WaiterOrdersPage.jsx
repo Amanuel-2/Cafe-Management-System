@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { MetricCard } from '../../components/common/MetricCard';
 import { PageHeader } from '../../components/common/PageHeader';
 import { useAuth } from '../../hooks/useAuth';
-import { useOrderStore } from '../../store/orderStore';
+import { useOrders } from '../../hooks/useOrders';
 import { formatETB } from '../../utils/currency';
 
 const colors = { pending: 'default', preparing: 'warning', ready: 'success', served: 'info', cancelled: 'error' };
 
 export function WaiterOrdersPage() {
-  const { user } = useAuth(); const orders = useOrderStore((state) => state.orders); const { markOrderServed, requestBill, refresh } = useOrderStore(); const [feedback, setFeedback] = useState(null);
+  const { user } = useAuth(); const { orders, markOrderServed, requestBill, refresh } = useOrders(); const [feedback, setFeedback] = useState(null);
   const mine = orders.filter((order) => !user || order.waiterName === user.name).filter((order) => order.paymentStatus !== 'paid' && order.status !== 'cancelled');
   const action = (callback, success) => { try { callback(); setFeedback({ severity: 'success', message: success }); } catch (error) { setFeedback({ severity: 'error', message: error.message }); } };
   return <Stack spacing={3}>

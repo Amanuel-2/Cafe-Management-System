@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { MetricCard } from '../../components/common/MetricCard';
 import { PageHeader } from '../../components/common/PageHeader';
 import { tableService } from '../../services/tableService';
-import { useWaiterCartStore } from '../../store/waiterCartStore';
+import { useWaiterCart } from '../../hooks/useWaiterCart';
 
 const colors = { available: 'success', occupied: 'error', reserved: 'info', cleaning: 'warning' };
 
 export function WaiterFloorPage() {
-  const navigate = useNavigate(); const setTable = useWaiterCartStore((state) => state.setTable); const [tables, setTables] = useState(() => tableService.list()); const [feedback, setFeedback] = useState(null);
+  const navigate = useNavigate(); const { setTable } = useWaiterCart(); const [tables, setTables] = useState(() => tableService.list()); const [feedback, setFeedback] = useState(null);
   const select = (table) => { if (table.status !== 'available') { setFeedback({ severity: 'warning', message: `${table.name} is currently ${table.status}.` }); return; } setTable(table.id); navigate('/waiter/menu'); };
   return <Stack spacing={3}>
     <PageHeader eyebrow="Waiter station" title="Restaurant floor" description="Select an available table to begin an order or review the current floor state." actions={<Button variant="outlined" onClick={() => setTables(tableService.list())}>Refresh floor</Button>} />

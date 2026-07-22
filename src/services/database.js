@@ -1,5 +1,5 @@
 const DATABASE_KEY = 'restaurant-management-db';
-const DATABASE_VERSION = 7;
+const DATABASE_VERSION = 8;
 const CHANGE_EVENT = 'restaurant:database-change';
 
 const now = () => new Date().toISOString();
@@ -79,6 +79,7 @@ const initialDatabase = () => ({
   receipts: [],
   customers: [],
   expenses: [],
+  contactMessages: [],
   notifications: [
     { id: 'notification-low-bread', title: 'Low stock', description: 'Fresh bread is below its minimum stock level.', read: false, type: 'inventory', createdAt: now() },
   ],

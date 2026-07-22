@@ -1,23 +1,17 @@
-import { Box, Button, Container, Stack, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, Chip, Container, Grid, Stack, Typography } from '@mui/material';
+import { ArrowRight, ChefHat, Clock3, QrCode, UtensilsCrossed } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import hero from '../../assets/hero.png';
+import { database } from '../../services/database';
+import { menuService } from '../../services/menuService';
+import { formatETB } from '../../utils/currency';
 
 export function ConsumerHome() {
-  return (
-    <Box component="main">
-      <Container maxWidth="lg" sx={{ py: { xs: 8, md: 14 } }}>
-        <Stack spacing={3} sx={{ maxWidth: 720 }}>
-          <Typography color="primary" sx={{ fontWeight: 800, letterSpacing: 1 }}>WELCOME</Typography>
-          <Typography component="h1" variant="h2">Fresh food, simple ordering, better service.</Typography>
-          <Typography color="text.secondary" variant="h6">
-            Explore the menu, choose your favorites, and follow your order from the kitchen to your table.
-          </Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <Button component={Link} to="/menu" size="large" variant="contained">View menu</Button>
-            <Button component={Link} to="/track-order" size="large" variant="outlined">Track an order</Button>
-          </Stack>
-        </Stack>
-      </Container>
-    </Box>
-  );
+  const settings = database.getSettings();
+  const featured = menuService.list({ available: true }).slice(0, 3);
+  return <Box component="main">
+    <Box sx={{ overflow: 'hidden', bgcolor: '#1c1917', color: 'common.white' }}><Container maxWidth="xl"><Grid container alignItems="center" sx={{ minHeight: { xs: 620, md: 680 } }}><Grid size={{ xs: 12, md: 6 }}><Stack spacing={3} sx={{ py: 8, maxWidth: 650 }}><Chip label="Freshly prepared · Order online" color="primary" sx={{ alignSelf: 'flex-start', color: 'white', fontWeight: 800 }} /><Typography component="h1" variant="h2" sx={{ fontSize: { xs: '3rem', md: '4.6rem' }, lineHeight: 1.03, fontWeight: 900 }}>Good food should feel effortless.</Typography><Typography sx={{ color: 'grey.300', fontSize: { xs: '1.05rem', md: '1.25rem' }, maxWidth: 580 }}>Explore {settings.restaurantName}, customize your meal, send it straight to our kitchen, and follow every step.</Typography><Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}><Button component={Link} to="/menu" size="large" variant="contained" endIcon={<ArrowRight />}>Order from the menu</Button><Button component={Link} to="/qr-menu" size="large" variant="outlined" color="inherit" startIcon={<QrCode />}>Open QR menu</Button></Stack></Stack></Grid><Grid size={{ xs: 12, md: 6 }}><Box component="img" src={hero} alt="Fresh restaurant meal" sx={{ display: 'block', width: '100%', height: { xs: 310, md: 560 }, objectFit: 'cover', borderRadius: { xs: '32px 32px 0 0', md: 8 }, transform: { md: 'rotate(2deg)' }, boxShadow: 12 }} /></Grid></Grid></Container></Box>
+    <Container maxWidth="lg" sx={{ py: { xs: 7, md: 11 } }}><Stack spacing={1} sx={{ mb: 4 }}><Typography color="primary" variant="overline" fontWeight={900}>POPULAR NOW</Typography><Typography variant="h3" fontWeight={900}>A few house favorites</Typography></Stack><Grid container spacing={3}>{featured.map((item) => <Grid key={item.id} size={{ xs: 12, md: 4 }}><Card variant="outlined" sx={{ height: '100%', overflow: 'hidden' }}><Box component="img" src={item.image} alt="" sx={{ width: '100%', height: 190, objectFit: 'cover', bgcolor: 'action.hover' }} /><CardContent><Stack spacing={1.5}><Stack direction="row" justifyContent="space-between" gap={2}><Typography variant="h6" fontWeight={850}>{item.name}</Typography><Typography color="primary" fontWeight={900}>{formatETB(item.price)}</Typography></Stack><Typography color="text.secondary">{item.description}</Typography><Button component={Link} to={`/menu/${item.id}`} sx={{ alignSelf: 'flex-start' }}>View details</Button></Stack></CardContent></Card></Grid>)}</Grid></Container>
+    <Box sx={{ bgcolor: 'background.paper', borderBlock: 1, borderColor: 'divider' }}><Container maxWidth="lg" sx={{ py: 7 }}><Grid container spacing={4}>{[[UtensilsCrossed, 'Choose your favorites', 'Browse only items currently available from the kitchen.'], [ChefHat, 'Sent to the kitchen', 'Your order joins the same live workflow used by our staff.'], [Clock3, 'Track every step', 'Use your private reference and phone number for progress updates.']].map(([Icon, title, description]) => <Grid key={title} size={{ xs: 12, md: 4 }}><Stack direction="row" spacing={2}><Box sx={{ width: 48, height: 48, borderRadius: 3, bgcolor: 'primary.main', color: 'white', display: 'grid', placeItems: 'center', flexShrink: 0 }}><Icon /></Box><Box><Typography fontWeight={900}>{title}</Typography><Typography color="text.secondary" variant="body2">{description}</Typography></Box></Stack></Grid>)}</Grid></Container></Box>
+  </Box>;
 }
-

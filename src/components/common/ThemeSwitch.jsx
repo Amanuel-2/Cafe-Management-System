@@ -1,0 +1,2 @@
+import { IconButton, Tooltip } from '@mui/material'; import { Moon, Sun } from 'lucide-react'; import { useAppTheme } from '../../hooks/useAppTheme';
+export function ThemeSwitch() { const { mode, toggle } = useAppTheme(); const dark = mode === 'dark'; return <Tooltip title={dark ? 'Use light mode' : 'Use dark mode'}><IconButton onClick={toggle} aria-label={dark ? 'Use light mode' : 'Use dark mode'}>{dark ? <Sun /> : <Moon />}</IconButton></Tooltip>; }

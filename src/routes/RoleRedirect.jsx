@@ -1,0 +1,2 @@
+import { Box, CircularProgress } from '@mui/material'; import { Navigate } from 'react-router-dom'; import { useAuth } from '../hooks/useAuth'; import { roleHomePath } from './access';
+export function RoleRedirect() { const { user, isReady } = useAuth(); if (!isReady) return <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}><CircularProgress aria-label="Loading session" /></Box>; return <Navigate to={user ? roleHomePath[user.role] : '/login'} replace />; }

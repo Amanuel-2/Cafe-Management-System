@@ -3,14 +3,14 @@ import { CheckCheck, ChefHat, Clock, Search, ShoppingBag } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { MetricCard } from '../../components/common/MetricCard';
 import { PageHeader } from '../../components/common/PageHeader';
-import { useOrderStore } from '../../store/orderStore';
+import { useOrders } from '../../hooks/useOrders';
 
 const lanes = [{ id: 'pending', title: 'New orders', color: 'info' }, { id: 'preparing', title: 'Preparing', color: 'warning' }, { id: 'ready', title: 'Ready', color: 'success' }];
 
-function elapsed(date, currentTime) { return Math.max(0, Math.floor((currentTime - new Date(date).getTime()) / 60000)); }
+function elapsed(date, currentTime) { return currentTime ? Math.max(0, Math.floor((currentTime - new Date(date).getTime()) / 60000)) : 0; }
 
 function KitchenCard({ order, currentTime }) {
-  const { acceptOrder, updateItemStatus, markOrderReady } = useOrderStore(); const minutes = elapsed(order.acceptedAt ?? order.createdAt, currentTime); const allReady = order.items.every((item) => item.status === 'ready');
+  const { acceptOrder, updateItemStatus, markOrderReady } = useOrders(); const minutes = elapsed(order.acceptedAt ?? order.createdAt, currentTime); const allReady = order.items.every((item) => item.status === 'ready');
   return <Stack spacing={2} sx={{ border: 1, borderColor: minutes >= 15 ? 'error.main' : 'divider', borderLeftWidth: 4, borderRadius: 2.5, p: 2, bgcolor: 'background.paper' }}>
     <Stack direction="row" justifyContent="space-between"><Stack><Typography fontWeight={850}>{order.table} · {order.receiptNumber}</Typography><Typography variant="caption" color="text.secondary">Waiter: {order.waiterName}</Typography></Stack><Chip size="small" color={minutes >= 15 ? 'error' : minutes >= 10 ? 'warning' : 'default'} icon={<Clock size={14} />} label={`${minutes} min`} /></Stack>
     <Stack spacing={1}>{order.items.map((item) => <Stack key={item.id} direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 1.25, borderRadius: 2, bgcolor: 'action.hover' }}><Stack><Typography variant="body2" fontWeight={750}>{item.quantity}× {item.name}</Typography>{item.notes ? <Typography variant="caption" color="warning.main">{item.notes}</Typography> : null}</Stack>{order.status === 'preparing' ? <Button size="small" color={item.status === 'ready' ? 'success' : 'inherit'} onClick={() => updateItemStatus(order.id, item.id, item.status === 'ready' ? 'preparing' : 'ready')}>{item.status === 'ready' ? 'Ready' : 'Cooking'}</Button> : <Chip size="small" label={item.status} />}</Stack>)}</Stack>
@@ -20,7 +20,7 @@ function KitchenCard({ order, currentTime }) {
 }
 
 export function ChefDashboard() {
-  const orders = useOrderStore((state) => state.orders); const refresh = useOrderStore((state) => state.refresh); const [query, setQuery] = useState(''); const [currentTime, setCurrentTime] = useState(0);
+  const { orders, refresh } = useOrders(); const [query, setQuery] = useState(''); const [currentTime, setCurrentTime] = useState(null);
   useEffect(() => { const timer = window.setInterval(() => setCurrentTime(Date.now()), 30000); return () => window.clearInterval(timer); }, []);
   const active = useMemo(() => orders.filter((order) => ['pending', 'preparing', 'ready'].includes(order.status) && (!query || `${order.receiptNumber} ${order.table} ${order.items.map((item) => item.name).join(' ')}`.toLowerCase().includes(query.toLowerCase()))), [orders, query]);
   return <Stack spacing={3}>
